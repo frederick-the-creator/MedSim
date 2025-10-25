@@ -1,0 +1,116 @@
+import { useState, useRef, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Send } from "lucide-react";
+import { ChatMessage } from "@shared/schema";
+import { Card } from "@/components/ui/card";
+
+interface ChatInterfaceProps {
+  patientName: string;
+  messages: ChatMessage[];
+  onSendMessage: (message: string) => void;
+  isLoading?: boolean;
+}
+
+export default function ChatInterface({ 
+  patientName, 
+  messages, 
+  onSendMessage,
+  isLoading = false 
+}: ChatInterfaceProps) {
+  const [input, setInput] = useState("");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const handleSend = () => {
+    if (input.trim() && !isLoading) {
+      onSendMessage(input.trim());
+      setInput("");
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
+  return (
+    <div className="flex flex-col h-full">
+      <div className="border-b p-4 bg-card">
+        <h2 className="text-xl font-semibold" data-testid="text-patient-name">
+          Consultation with {patientName}
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          Begin your consultation. Remember to use open questions.
+        </p>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-6 space-y-4">
+        {messages.length === 0 ? (
+          <div className="flex items-center justify-center h-full">
+            <Card className="p-6 max-w-md">
+              <p className="text-center text-muted-foreground text-sm leading-relaxed">
+                Start the consultation by introducing yourself and asking an open question.
+              </p>
+            </Card>
+          </div>
+        ) : (
+          <>
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                data-testid={`message-${message.role}-${message.id}`}
+              >
+                <div
+                  className={`max-w-xl rounded-2xl px-4 py-3 ${
+                    message.role === 'user'
+                      ? 'bg-primary text-primary-foreground rounded-tr-sm'
+                      : 'bg-card border rounded-tl-sm'
+                  }`}
+                >
+                  <p className="text-base leading-relaxed whitespace-pre-wrap">
+                    {message.content}
+                  </p>
+                </div>
+              </div>
+            ))}
+            <div ref={messagesEndRef} />
+          </>
+        )}
+      </div>
+
+      <div className="border-t p-4 bg-background">
+        <div className="flex gap-2 max-w-3xl mx-auto">
+          <Textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Type your message..."
+            className="resize-none min-h-[60px]"
+            disabled={isLoading}
+            data-testid="input-message"
+          />
+          <Button
+            onClick={handleSend}
+            disabled={!input.trim() || isLoading}
+            size="icon"
+            className="min-h-[60px] w-[60px]"
+            data-testid="button-send"
+          >
+            <Send className="w-5 h-5" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
