@@ -10,6 +10,7 @@ export const medicalCases: MedicalCase[] = [
     scenario: "Explain the likely diagnosis and management plan to the patient",
     task: "Explain the likely diagnosis and management plan to the patient",
     triageNote: "Right eye painful/red. Worse this morning.",
+    agentId: "agent_9001k7a6wzgpf0psegzga9371m18",
     keyFindings: {
       "VA": "R 6/18 (pinhole 6/12), L 6/6",
       "External": "epiphora on the right",
@@ -49,6 +50,7 @@ export const medicalCases: MedicalCase[] = [
     scenario: "Explain to the patient the findings and initial management plan going forward",
     task: "Explain to the patient the findings and initial management plan going forward",
     triageNote: "Routine optician referral - high eye pressures detected",
+    agentId: "agent_0501k7fhza4afxdsc4nkmqhgz7cv",
     keyFindings: {
       "VA": "R 6/9, L 6/9",
       "IOP": "R 28 mmHg, L 26 mmHg",
@@ -89,6 +91,7 @@ export const medicalCases: MedicalCase[] = [
     scenario: "Explain the findings and outline the management plan",
     task: "Explain the findings and outline the management plan",
     triageNote: "Follow-up for wet AMD - currently on anti-VEGF injections",
+    agentId: "agent_2301k7h3fq7vfjfa1xcscjeykx93",
     keyFindings: {
       "VA": "R 6/60, L 6/12",
       "Amsler grid": "Central distortion right eye",

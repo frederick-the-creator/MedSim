@@ -27,6 +27,7 @@ export interface MedicalCase {
   scenario: string;
   task: string;
   triageNote: string;
+  agentId: string;
   keyFindings: Record<string, string | string[]>;
   patientProfile: {
     background: string;
