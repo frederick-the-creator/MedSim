@@ -144,7 +144,7 @@ function Scene({
 
   useEffect(() => {
     const apply = () => {
-      if (!circleRef.current) return
+      if (!circleRef.current?.material?.uniforms) return
       const isDark = document.documentElement.classList.contains("dark")
       circleRef.current.material.uniforms.uInverted.value = isDark ? 1 : 0
     }
