@@ -36,6 +36,7 @@ export default function VoiceAgentInterface({
       const id = await conversation.startSession({
         agentId: agentId,
         connectionType: "websocket" as const,
+        userId: "fixed-user-12345",
         clientTools: {},
       });
       setConversationId(id);
@@ -49,6 +50,8 @@ export default function VoiceAgentInterface({
   const handleEndConversation = () => {
     conversation.endSession();
     console.log("Conversation ended. ID was:", conversationIdRef.current);
+    setConversationId(null);
+    conversationIdRef.current = null;
   };
 
   useEffect(() => {
