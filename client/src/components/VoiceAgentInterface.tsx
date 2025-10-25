@@ -102,10 +102,11 @@ export default function VoiceAgentInterface({
       <div className="flex-1 flex items-center justify-center p-6">
         <Card className="p-8 max-w-md w-full">
           <div className="flex flex-col items-center gap-6">
-            <div className="relative" data-testid="agent-state-indicator">
-              <div className="bg-muted relative h-48 w-48 rounded-full p-1 shadow-[inset_0_2px_8px_rgba(0,0,0,0.1)] dark:shadow-[inset_0_2px_8px_rgba(0,0,0,0.5)]">
-                <div className="bg-background h-full w-full overflow-hidden rounded-full shadow-[inset_0_0_12px_rgba(0,0,0,0.05)] dark:shadow-[inset_0_0_12px_rgba(0,0,0,0.3)]">
+            <div className="relative w-48 h-48" data-testid="agent-state-indicator">
+              <div className="absolute inset-0 bg-muted rounded-full p-1 shadow-[inset_0_2px_8px_rgba(0,0,0,0.1)] dark:shadow-[inset_0_2px_8px_rgba(0,0,0,0.5)]">
+                <div className="relative w-full h-full bg-background rounded-full shadow-[inset_0_0_12px_rgba(0,0,0,0.05)] dark:shadow-[inset_0_0_12px_rgba(0,0,0,0.3)]" style={{ overflow: 'hidden' }}>
                   <Orb
+                    key="voice-orb"
                     colors={["#7C3AED", "#A78BFA"]}
                     agentState={getAgentState()}
                     volumeMode="manual"
