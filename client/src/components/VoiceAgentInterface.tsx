@@ -1,0 +1,147 @@
+import { useState, useEffect, useRef } from "react";
+import { useConversation } from "@elevenlabs/react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Phone, PhoneOff } from "lucide-react";
+
+interface VoiceAgentInterfaceProps {
+  patientName: string;
+  agentId: string;
+}
+
+export default function VoiceAgentInterface({ 
+  patientName, 
+  agentId
+}: VoiceAgentInterfaceProps) {
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const conversationIdRef = useRef<string | null>(null);
+
+  const conversation = useConversation({
+    onConnect: () => {
+      console.log("Voice agent connected");
+    },
+    onDisconnect: () => {
+      console.log("Voice agent disconnected");
+    },
+    onMessage: (message) => {
+      console.log("Message received:", message);
+    },
+    onError: (error) => {
+      console.error("Voice agent error:", error);
+    },
+  });
+
+  const handleStartConversation = async () => {
+    try {
+      const id = await conversation.startSession({
+        agentId: agentId,
+        connectionType: "websocket" as const,
+        clientTools: {},
+      });
+      setConversationId(id);
+      conversationIdRef.current = id;
+      console.log("Conversation started with ID:", id, "User ID: fixed-user-12345");
+    } catch (error) {
+      console.error("Failed to start conversation:", error);
+    }
+  };
+
+  const handleEndConversation = () => {
+    conversation.endSession();
+    console.log("Conversation ended. ID was:", conversationIdRef.current);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (conversation.status === "connected") {
+        conversation.endSession();
+      }
+    };
+  }, []);
+
+  const getAgentStateColor = () => {
+    if (conversation.status !== "connected") return "bg-muted";
+    if (conversation.isSpeaking) return "bg-primary";
+    return "bg-green-500";
+  };
+
+  const getAgentStateText = () => {
+    if (conversation.status === "connecting") return "Connecting...";
+    if (conversation.status === "connected") {
+      if (conversation.isSpeaking) return "Agent is speaking";
+      return "Listening...";
+    }
+    return "Ready to start";
+  };
+
+  return (
+    <div className="flex flex-col h-full">
+      <div className="border-b p-4 bg-card">
+        <h2 className="text-xl font-semibold" data-testid="text-patient-name">
+          Voice Consultation with {patientName}
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          Click the phone button to begin the voice consultation
+        </p>
+      </div>
+
+      <div className="flex-1 flex items-center justify-center p-6">
+        <Card className="p-8 max-w-md w-full">
+          <div className="flex flex-col items-center gap-6">
+            <div className="relative">
+              <div 
+                className={`w-32 h-32 rounded-full ${getAgentStateColor()} transition-all duration-300 shadow-lg flex items-center justify-center`}
+                data-testid="agent-state-indicator"
+              >
+                {conversation.isSpeaking && (
+                  <div className="absolute inset-0 rounded-full bg-primary/30 animate-ping" />
+                )}
+              </div>
+            </div>
+
+            <div className="text-center">
+              <p className="text-lg font-medium" data-testid="text-agent-status">
+                {getAgentStateText()}
+              </p>
+              <p className="text-sm text-muted-foreground mt-2">
+                {conversation.status === "connected" 
+                  ? "Speak naturally to communicate with the patient"
+                  : "Press the phone button to start"}
+              </p>
+            </div>
+
+            <div className="flex gap-4">
+              {conversation.status !== "connected" ? (
+                <Button
+                  onClick={handleStartConversation}
+                  size="lg"
+                  className="rounded-full w-16 h-16"
+                  disabled={conversation.status === "connecting"}
+                  data-testid="button-start-call"
+                >
+                  <Phone className="w-6 h-6" />
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleEndConversation}
+                  size="lg"
+                  variant="destructive"
+                  className="rounded-full w-16 h-16"
+                  data-testid="button-end-call"
+                >
+                  <PhoneOff className="w-6 h-6" />
+                </Button>
+              )}
+            </div>
+
+            {conversationId && (
+              <p className="text-xs text-muted-foreground" data-testid="text-conversation-id">
+                Conversation ID: {conversationId.substring(0, 8)}...
+              </p>
+            )}
+          </div>
+        </Card>
+      </div>
+    </div>
+  );
+}
