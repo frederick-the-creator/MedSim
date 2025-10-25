@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useConversation } from "@elevenlabs/react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Orb, AgentState } from "@/components/ui/orb";
 import { Phone, PhoneOff } from "lucide-react";
 
 interface VoiceAgentInterfaceProps {
@@ -62,10 +63,10 @@ export default function VoiceAgentInterface({
     };
   }, []);
 
-  const getAgentStateColor = () => {
-    if (conversation.status !== "connected") return "bg-muted";
-    if (conversation.isSpeaking) return "bg-primary";
-    return "bg-green-500";
+  const getAgentState = (): AgentState => {
+    if (conversation.status !== "connected") return null;
+    if (conversation.isSpeaking) return "talking";
+    return "listening";
   };
 
   const getAgentStateText = () => {
@@ -75,6 +76,16 @@ export default function VoiceAgentInterface({
       return "Listening...";
     }
     return "Ready to start";
+  };
+
+  const getInputVolume = () => {
+    const raw = conversation.getInputVolume?.() ?? 0;
+    return Math.min(1.0, Math.pow(raw, 0.5) * 2.5);
+  };
+
+  const getOutputVolume = () => {
+    const raw = conversation.getOutputVolume?.() ?? 0;
+    return Math.min(1.0, Math.pow(raw, 0.5) * 2.5);
   };
 
   return (
@@ -91,14 +102,17 @@ export default function VoiceAgentInterface({
       <div className="flex-1 flex items-center justify-center p-6">
         <Card className="p-8 max-w-md w-full">
           <div className="flex flex-col items-center gap-6">
-            <div className="relative">
-              <div 
-                className={`w-32 h-32 rounded-full ${getAgentStateColor()} transition-all duration-300 shadow-lg flex items-center justify-center`}
-                data-testid="agent-state-indicator"
-              >
-                {conversation.isSpeaking && (
-                  <div className="absolute inset-0 rounded-full bg-primary/30 animate-ping" />
-                )}
+            <div className="relative" data-testid="agent-state-indicator">
+              <div className="bg-muted relative h-48 w-48 rounded-full p-1 shadow-[inset_0_2px_8px_rgba(0,0,0,0.1)] dark:shadow-[inset_0_2px_8px_rgba(0,0,0,0.5)]">
+                <div className="bg-background h-full w-full overflow-hidden rounded-full shadow-[inset_0_0_12px_rgba(0,0,0,0.05)] dark:shadow-[inset_0_0_12px_rgba(0,0,0,0.3)]">
+                  <Orb
+                    colors={["#7C3AED", "#A78BFA"]}
+                    agentState={getAgentState()}
+                    volumeMode="manual"
+                    getInputVolume={getInputVolume}
+                    getOutputVolume={getOutputVolume}
+                  />
+                </div>
               </div>
             </div>
 
