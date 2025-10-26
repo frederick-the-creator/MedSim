@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { useConversation } from "@elevenlabs/react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Orb, AgentState } from "@/components/ui/orb";
 import { Phone, PhoneOff } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FileText, Stethoscope, Lightbulb } from "lucide-react";
 
 interface VoiceAgentInterfaceProps {
   patientName: string;
@@ -89,8 +90,8 @@ export default function VoiceAgentInterface({
   };
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="border-b p-4 bg-card">
+    <div>
+      <div className="shadcn-card rounded-xl border bg-card border-card-border text-card-foreground shadow-sm p-8 max-w-md w-full">
         <h2 className="text-xl font-semibold" data-testid="text-patient-name">
           Voice Consultation with {patientName}
         </h2>
@@ -99,7 +100,6 @@ export default function VoiceAgentInterface({
         </p>
       </div>
 
-      <div className="flex-1 flex items-center justify-center p-6">
         <Card className="p-8 max-w-md w-full">
           <div className="flex flex-col items-center gap-6">
             <div className="relative w-48 h-48" data-testid="agent-state-indicator">
@@ -159,7 +159,31 @@ export default function VoiceAgentInterface({
             )}
           </div>
         </Card>
-      </div>
+        
+        <Card className="bg-accent/30 border-accent">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Lightbulb className="w-4 h-4 text-primary" />
+              Tip: Feedback Mode
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              <li className="flex items-start gap-2">
+                <span className="font-semibold text-foreground">Auto-detect:</span>
+                <span>When you close the consult (e.g., say "Goodbye"/end the case), feedback starts automatically.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="font-semibold text-foreground">Manual trigger:</span>
+                <span>If it doesn't start, say "FEEDBACK MODE".</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span>You'll get structured feedback on: history, reasoning/safety, empathy/communication, ICE coverage, clarity (jargon check), and practicalities (leaflets/referrals).</span>
+              </li>
+            </ul>
+          </CardContent>
+        </Card>
+
     </div>
   );
 }

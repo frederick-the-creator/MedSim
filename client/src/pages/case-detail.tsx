@@ -50,13 +50,14 @@ export default function CaseDetail() {
     <div className="min-h-screen flex flex-col bg-background">
       <Header showBackButton onBack={handleBack} />
 
-      <main className="flex-1 overflow-hidden">
-        <div className="h-full grid grid-cols-1 lg:grid-cols-3">
-          <div className="border-r overflow-hidden">
+      <main className="container mx-auto px-4 py-8">  
+        <div className="grid lg:grid-cols-[2fr_1fr] gap-6">
+
+          <div className="bg-card border border-border rounded-xl p-6 shadow-card animate-scale-in">
             <CaseBrief medicalCase={medicalCase} />
           </div>
 
-          <div className="lg:col-span-2 overflow-hidden">
+          <div className="space-y-4">
             {showFeedback && feedback ? (
               <FeedbackDisplay feedback={feedback} onNewCase={handleNewCase} />
             ) : (

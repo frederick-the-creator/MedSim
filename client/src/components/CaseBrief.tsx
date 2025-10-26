@@ -43,7 +43,7 @@ export default function CaseBrief({ medicalCase }: CaseBriefProps) {
         <CardContent>
           <dl className="space-y-3">
             {Object.entries(medicalCase.keyFindings).map(([key, value]) => (
-              <div key={key} className="border-l-2 border-primary pl-4">
+              <div key={key} className="border-primary pl-4">
                 <dt className="text-sm font-medium mb-1">{key}</dt>
                 {Array.isArray(value) ? (
                   <dd className="text-sm text-muted-foreground">
@@ -75,30 +75,6 @@ export default function CaseBrief({ medicalCase }: CaseBriefProps) {
           <p className="text-sm leading-relaxed" data-testid="text-task">
             {medicalCase.task}
           </p>
-        </CardContent>
-      </Card>
-
-      <Card className="bg-accent/30 border-accent">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Lightbulb className="w-4 h-4 text-primary" />
-            Tip: Feedback Mode
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="space-y-2 text-sm text-muted-foreground">
-            <li className="flex items-start gap-2">
-              <span className="font-semibold text-foreground">Auto-detect:</span>
-              <span>When you close the consult (e.g., say "Goodbye"/end the case), feedback starts automatically.</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="font-semibold text-foreground">Manual trigger:</span>
-              <span>If it doesn't start, say "FEEDBACK MODE".</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span>You'll get structured feedback on: history, reasoning/safety, empathy/communication, ICE coverage, clarity (jargon check), and practicalities (leaflets/referrals).</span>
-            </li>
-          </ul>
         </CardContent>
       </Card>
     </div>
