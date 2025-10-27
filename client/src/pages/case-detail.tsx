@@ -7,19 +7,16 @@ import TwoColumnRow from "@/components/layout/TwoColumnRow";
 import AssessmentDialog from "@/components/AssessmentDialog";
 import { MOCK_VOICE_AGENT } from "@/lib/config";
 import ChatInterface from "@/components/ChatInterface";
-import FeedbackDisplay from "@/components/FeedbackDisplay";
 import { medicalCases } from "@shared/cases";
-import { ConversationFeedback } from "@shared/schema";
 
 export default function CaseDetail() {
   const [, params] = useRoute("/case/:id");
   const [, setLocation] = useLocation();
-  const [showFeedback, setShowFeedback] = useState(false);
-  const [feedback, setFeedback] = useState<ConversationFeedback | null>(null);
   const [isAssessmentLoading, setIsAssessmentLoading] = useState(false);
   const [assessment, setAssessment] = useState<string | null>(null);
   const [transcript, setTranscript] = useState<string | null>(null);
   const [chatMessages, setChatMessages] = useState([] as any[]);
+  const [isChatLoading, setIsChatLoading] = useState(false);
   const secondRowRef = useRef<HTMLDivElement | null>(null);
 
   const caseId = params?.id ? parseInt(params.id) : null;
@@ -27,8 +24,6 @@ export default function CaseDetail() {
 
   useEffect(() => {
     // Reset state when case changes
-    setShowFeedback(false);
-    setFeedback(null);
     setIsAssessmentLoading(false);
     setAssessment(null);
     setTranscript(null);
@@ -126,12 +121,37 @@ export default function CaseDetail() {
                 <div className="bg-card border border-border rounded-xl p-6 shadow-card">
                   <ChatInterface
                     messages={chatMessages as any}
-                    onSendMessage={(msg) => {
-                      setChatMessages((prev: any[]) => [
-                        ...prev,
-                        { id: `${Date.now()}`, role: 'user', content: msg },
-                      ]);
+                    onSendMessage={async (text) => {
+                      const userMsg = { id: `${Date.now()}`, role: 'user', content: text, timestamp: new Date() };
+                      setChatMessages((prev: any[]) => [...prev, userMsg]);
+                      const assistantId = `${Date.now()}-assist`;
+                      setChatMessages((prev: any[]) => [...prev, { id: assistantId, role: 'assistant', content: '', timestamp: new Date() }]);
+                      setIsChatLoading(true);
+                      try {
+                        const body = {
+                          messages: [...chatMessages, userMsg].map((m: any) => ({ role: m.role, content: m.content })),
+                          transcript: transcript ?? '',
+                          assessment: assessment ?? '',
+                        };
+                        const resp = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+                        if (!resp.ok || !resp.body) throw new Error(`Chat error ${resp.status}`);
+                        const reader = resp.body.getReader();
+                        const decoder = new TextDecoder();
+                        let acc = '';
+                        while (true) {
+                          const { value, done } = await reader.read();
+                          if (done) break;
+                          acc += decoder.decode(value, { stream: true });
+                          setChatMessages((prev: any[]) => prev.map((m: any) => m.id === assistantId ? { ...m, content: acc } : m));
+                        }
+                      } catch (e) {
+                        const errText = (e as any)?.message || 'Chat failed';
+                        setChatMessages((prev: any[]) => prev.map((m: any) => m.id === assistantId ? { ...m, content: errText } : m));
+                      } finally {
+                        setIsChatLoading(false);
+                      }
                     }}
+                    isLoading={isChatLoading}
                   />
                 </div>
               }

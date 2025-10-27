@@ -4,6 +4,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Send } from "lucide-react";
 import { ChatMessage } from "@shared/schema";
 import { Card } from "@/components/ui/card";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface ChatInterfaceProps {
   messages: ChatMessage[];
@@ -50,15 +52,6 @@ export default function ChatInterface({
       </div>
 
       <div className="flex-1 overflow-y-auto p-6 space-y-4">
-        {messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
-            <Card className="p-6 max-w-md">
-              <p className="text-center text-muted-foreground text-sm leading-relaxed">
-                Start the consultation by introducing yourself and asking an open question.
-              </p>
-            </Card>
-          </div>
-        ) : (
           <>
             {messages.map((message) => (
               <div
@@ -73,15 +66,16 @@ export default function ChatInterface({
                       : 'bg-card border rounded-tl-sm'
                   }`}
                 >
-                  <p className="text-base leading-relaxed whitespace-pre-wrap">
-                    {message.content}
-                  </p>
+                  <div className="prose prose-sm dark:prose-invert max-w-none">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {message.content}
+                    </ReactMarkdown>
+                  </div>
                 </div>
               </div>
             ))}
             <div ref={messagesEndRef} />
           </>
-        )}
       </div>
 
       <div className="border-t p-4 bg-background">
