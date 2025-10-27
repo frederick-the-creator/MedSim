@@ -22,7 +22,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const systemInstructions = await loadSystemPrompt();
       const assessment = await assessWithGemini({ transcript, systemInstructions });
 
-      return res.json({ assessment });
+      return res.json({ transcript, assessment });
     } catch (err) {
       next(err);
     }
