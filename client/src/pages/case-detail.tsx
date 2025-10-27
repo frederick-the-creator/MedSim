@@ -120,7 +120,6 @@ export default function CaseDetail() {
               right={
                 <div className="bg-card border border-border rounded-xl p-6 shadow-card">
                   <ChatInterface
-                    patientName={medicalCase.patientName}
                     messages={chatMessages as any}
                     onSendMessage={(msg) => {
                       setChatMessages((prev: any[]) => [

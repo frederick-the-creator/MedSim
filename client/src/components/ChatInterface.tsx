@@ -6,14 +6,12 @@ import { ChatMessage } from "@shared/schema";
 import { Card } from "@/components/ui/card";
 
 interface ChatInterfaceProps {
-  patientName: string;
   messages: ChatMessage[];
   onSendMessage: (message: string) => void;
   isLoading?: boolean;
 }
 
-export default function ChatInterface({ 
-  patientName, 
+export default function ChatInterface({
   messages, 
   onSendMessage,
   isLoading = false 
@@ -47,11 +45,8 @@ export default function ChatInterface({
     <div className="flex flex-col h-full">
       <div className="border-b p-4 bg-card">
         <h2 className="text-xl font-semibold" data-testid="text-patient-name">
-          Consultation with {patientName}
+          Explore your assessment with our coaching agent
         </h2>
-        <p className="text-sm text-muted-foreground">
-          Begin your consultation. Remember to use open questions.
-        </p>
       </div>
 
       <div className="flex-1 overflow-y-auto p-6 space-y-4">
