@@ -1,0 +1,20 @@
+{
+    // --- indentation ---
+    "editor.insertSpaces": false,          // use tabs, not spaces
+    "editor.detectIndentation": false,     // don't auto-detect from existing files
+    "editor.tabSize": 2,                   // visual width of a tab (set your preference)
+  
+    // --- formatting ---
+    "editor.formatOnSave": true,           // auto-format every time you save
+    "[javascript]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+    "[typescript]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+    "[json]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+    "[html]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+    "[css]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+    "[markdown]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  
+    // --- prettier integration ---
+    "prettier.useTabs": true,
+    "prettier.tabWidth": 2
+  }
+  

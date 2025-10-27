@@ -1,5 +1,5 @@
-import InstructionSteps from '../InstructionSteps';
+import InstructionSteps from "../InstructionSteps";
 
 export default function InstructionStepsExample() {
-  return <InstructionSteps />;
+	return <InstructionSteps />;
 }

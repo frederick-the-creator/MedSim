@@ -8,24 +8,24 @@ import CaseDetail from "@/pages/case-detail";
 import NotFound from "@/pages/not-found";
 
 function Router() {
-  return (
-    <Switch>
-      <Route path="/" component={Home} />
-      <Route path="/case/:id" component={CaseDetail} />
-      <Route component={NotFound} />
-    </Switch>
-  );
+	return (
+		<Switch>
+			<Route path="/" component={Home} />
+			<Route path="/case/:id" component={CaseDetail} />
+			<Route component={NotFound} />
+		</Switch>
+	);
 }
 
 function App() {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Router />
-      </TooltipProvider>
-    </QueryClientProvider>
-  );
+	return (
+		<QueryClientProvider client={queryClient}>
+			<TooltipProvider>
+				<Toaster />
+				<Router />
+			</TooltipProvider>
+		</QueryClientProvider>
+	);
 }
 
 export default App;
