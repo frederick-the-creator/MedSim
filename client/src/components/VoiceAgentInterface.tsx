@@ -3,38 +3,25 @@ import { useConversation } from "@elevenlabs/react";
 import { Button } from "@/components/ui/button";
 import { Orb, AgentState } from "@/components/ui/orb";
 import { Phone, PhoneOff } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Lightbulb } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  DialogClose,
-} from "@/components/ui/dialog";
+import { Card } from "@/components/ui/card";
+import { MOCK_VOICE_AGENT } from "@/lib/config";
 
-// Enable mock mode by setting VITE_MOCK_VOICE_AGENT=true in client/.env.local
-const raw = (import.meta as any).env?.VITE_MOCK_VOICE_AGENT;
-if (raw == null) throw new Error("VITE_MOCK_VOICE_AGENT is required. Set it to 'true' or 'false' in client/.env.local");
-const MOCK_VOICE_AGENT = raw === "true";
+// Mock flag centralized in lib/config
+console.log('Mock voice agent', MOCK_VOICE_AGENT)
 
 interface VoiceAgentInterfaceProps {
   patientName: string;
   agentId: string;
+  onEndConversation?: (conversationId: string | null) => void;
 }
 
 export default function VoiceAgentInterface({ 
   patientName, 
-  agentId
+  agentId,
+  onEndConversation,
 }: VoiceAgentInterfaceProps) {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const conversationIdRef = useRef<string | null>(null);
-  const [isAssessing, setIsAssessing] = useState(false);
-  const [assessment, setAssessment] = useState<string | null>(null);
-  const [assessmentError, setAssessmentError] = useState<string | null>(null);
-  const [isAssessmentDialogOpen, setIsAssessmentDialogOpen] = useState(false);
   const [isConnectedMock, setIsConnectedMock] = useState(false);
   const [isSpeakingMock, setIsSpeakingMock] = useState(false);
   const speakingIntervalRef = useRef<number | null>(null);
@@ -60,9 +47,6 @@ export default function VoiceAgentInterface({
       const id = `mock-${Math.random().toString(36).slice(2, 10)}`;
       setConversationId(id);
       conversationIdRef.current = id;
-      setAssessment(null);
-      setAssessmentError(null);
-      setIsAssessmentDialogOpen(false);
       setIsConnectedMock(true);
       // Toggle speaking/listening periodically
       if (speakingIntervalRef.current) window.clearInterval(speakingIntervalRef.current);
@@ -82,9 +66,7 @@ export default function VoiceAgentInterface({
       });
       setConversationId(id);
       conversationIdRef.current = id;
-      setAssessment(null);
-      setAssessmentError(null);
-      setIsAssessmentDialogOpen(false);
+      // Clear any parent-managed state externally
       console.log("Conversation started with ID:", id, "User ID: fixed-user-12345");
     } catch (error) {
       console.error("Failed to start conversation:", error);
@@ -103,29 +85,10 @@ export default function VoiceAgentInterface({
       }
       setIsConnectedMock(false);
       setIsSpeakingMock(false);
-
-      if (id) {
-        try {
-          setIsAssessing(true);
-          setAssessmentError(null);
-          await new Promise((resolve) => setTimeout(resolve, 800));
-          const fixedAssessment = `"assessment": "This was a good start to the consultation, demonstrating empathy and a structured approach.\n\n**Strengths:**\n\n*   **History Taking:** You gathered relevant information about the onset, symptoms, and laterality of the eye pain. You also inquired about medical and ocular history, including contact lens use and trauma.\n*   **Empathy & Rapport:** You acknowledged the patient's pain and anxiety, showing concern and understanding.\n*   **Explanation:** You clearly explained the diagnosis of a corneal ulcer and the proposed management plan.\n*   **Safety Netting:** You provided clear instructions on when to return to the A&E if symptoms worsen.\n*   **ICE:** You elicited the patient's concern about the seriousness of the condition and specifically addressed her fear about her sight.\n\n**Areas for Improvement:**\n\n*   **History Taking:** As highlighted by the agent, include specific questions about recent swimming or water exposure early in the history to assess the risk of microbial or Acanthamoeba keratitis. Always check visual acuity in *both* eyes (with pinhole if necessary).\n*   **Clinical Reasoning & Safety-netting:** Explicitly state contraindications, such as the avoidance of steroids, and emphasize the urgent need for ophthalmological review.\n*   **Communication:** While empathetic, use signposting to manage patient anxiety (e.g., "I'll ask a few quick questions so we can help your pain faster"). Chunk information and check for understanding more frequently.\n*   **Practicalities:** While you provided a leaflet, ensure the patient knows how to use the antibiotic drops correctly (frequency, instillation technique). Confirm the follow-up appointment details.\n\n**Actionable Improvements:**\n\n1.  **Revise History Template:** Add "Do you wear contact lenses? Any swimming or water in the eye recently?" directly after pain/vision questions.\n2.  **Verbalize Key Safety Points:** When explaining management, state: "It's important *not* to use any steroid eye drops. We need an ophthalmologist to see you today."\n3.  **Enhance Communication:** Use signposting ("I'll ask a few quick questions..."), chunk information, and frequently check for understanding. Demonstrate active listening by reflecting back the patient's concerns."`;
-          setAssessment(fixedAssessment);
-          setIsAssessmentDialogOpen(true);
-        } catch (e: any) {
-          console.error("[MOCK] Assessment failed", e);
-          setAssessmentError(e?.message ?? "Assessment failed");
-        } finally {
-          setIsAssessing(false);
-          setConversationId(null);
-          conversationIdRef.current = null;
-        }
-      } else {
-        setConversationId(null);
-        conversationIdRef.current = null;
-        setIsAssessmentDialogOpen(false);
-      }
+      setConversationId(null);
+      conversationIdRef.current = null;
       console.log("[MOCK] Conversation ended. ID was:", id);
+      onEndConversation?.(id ?? null);
       return;
     }
 
@@ -136,40 +99,9 @@ export default function VoiceAgentInterface({
       console.error("Error ending session:", e);
     }
 
-    if (id) {
-      try {
-        setIsAssessing(true);
-        setAssessmentError(null);
-        const resp = await fetch("/api/assessment", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ conversationId: id }),
-        });
-
-        if (!resp.ok) {
-          const errJson = await resp.json().catch(() => ({}));
-          const message = (errJson && errJson.message) || `Server error ${resp.status}`;
-          throw new Error(message);
-        }
-
-        const json = await resp.json();
-        setAssessment(json.assessment ?? null);
-        if (json.assessment) {
-          setIsAssessmentDialogOpen(true);
-        }
-      } catch (e: any) {
-        console.error("Assessment failed", e);
-        setAssessmentError(e?.message ?? "Assessment failed");
-      } finally {
-        setIsAssessing(false);
-        setConversationId(null);
-        conversationIdRef.current = null;
-      }
-    } else {
-      setConversationId(null);
-      conversationIdRef.current = null;
-      setIsAssessmentDialogOpen(false);
-    }
+    setConversationId(null);
+    conversationIdRef.current = null;
+    onEndConversation?.(id ?? null);
   };
 
   // Use effect to disconnect agent when component dismounts
@@ -237,7 +169,7 @@ export default function VoiceAgentInterface({
 
   return (
     <div>
-      <div className="shadcn-card rounded-xl border bg-card border-card-border text-card-foreground shadow-sm p-8 max-w-md w-full">
+      <div className="space-y-4 h-full overflow-y-auto p-4">
         <h2 className="text-xl font-semibold" data-testid="text-patient-name">
           Voice Consultation with {patientName}
         </h2>
@@ -304,72 +236,12 @@ export default function VoiceAgentInterface({
               </p>
             )}
 
-            {isAssessing && (
-              <p className="text-xs text-muted-foreground" data-testid="text-assessing">
-                Assessing conversation...
-              </p>
-            )}
-
-            {assessmentError && (
-              <p className="text-xs text-destructive" data-testid="text-assessment-error">
-                {assessmentError}
-              </p>
-            )}
-
-            {assessment && (
-              <div className="w-full text-sm text-foreground" data-testid="text-assessment">
-                {assessment}
-              </div>
-            )}
+            {/* Assessment UI handled by parent */}
 
           </div>
         </Card>
 
-        <Dialog open={isAssessmentDialogOpen} onOpenChange={setIsAssessmentDialogOpen}>
-          <DialogContent className="sm:max-w-xl" data-testid="assessment-dialog">
-            <DialogHeader>
-              <DialogTitle>Consultation Assessment</DialogTitle>
-              <DialogDescription>
-                Summary of the conversation and feedback.
-              </DialogDescription>
-            </DialogHeader>
-            <div
-              className="max-h-[60vh] overflow-auto whitespace-pre-wrap text-sm text-foreground"
-              data-testid="assessment-dialog-content"
-            >
-              {assessment}
-            </div>
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button type="button">Close</Button>
-              </DialogClose>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-        
-        <Card className="bg-accent/30 border-accent">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Lightbulb className="w-4 h-4 text-primary" />
-              Tip: Feedback Mode
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li className="flex items-start gap-2">
-                <span className="font-semibold text-foreground">Auto-detect:</span>
-                <span>When you close the consult (e.g., say "Goodbye"/end the case), feedback starts automatically.</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="font-semibold text-foreground">Manual trigger:</span>
-                <span>If it doesn't start, say "FEEDBACK MODE".</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span>You'll get structured feedback on: history, reasoning/safety, empathy/communication, ICE coverage, clarity (jargon check), and practicalities (leaflets/referrals).</span>
-              </li>
-            </ul>
-          </CardContent>
-        </Card>
+        {/* Tip card removed; guidance handled elsewhere if needed */}
 
     </div>
   );
