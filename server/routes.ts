@@ -1,8 +1,8 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import fs from "fs/promises";
 import path from "path";
 import { z } from "zod";
+import assessmentSystem from "@prompts/assessment_system";
 import { buildCoachSystemInstruction } from "./promptBuilder";
 import { Assessment, AssessmentSchema } from "@shared/schemas/assessment";
 
@@ -22,7 +22,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 				return res.status(409).json({ message: "Transcript not ready" });
 			}
 
-			const systemInstruction = await loadSystemPrompt();
+			const systemInstruction = assessmentSystem;
 			const assessment = await assessWithGemini({
 				transcript,
 				systemInstruction,
@@ -154,13 +154,7 @@ async function fetchTranscriptFromElevenLabs(
 	return "";
 }
 
-async function loadSystemPrompt(): Promise<string> {
-	const promptPath = path.resolve(
-		process.cwd(),
-		"shared/prompts/assessment_system.txt",
-	);
-	return await fs.readFile(promptPath, "utf8");
-}
+// removed file I/O prompt loader; using module import instead
 
 function isNonNullObject(value: unknown): value is Record<string, unknown> {
 	return typeof value === "object" && value !== null;

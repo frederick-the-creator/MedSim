@@ -1,22 +1,11 @@
-import fs from "fs/promises";
-import path from "path";
-
-let cachedPersona: string | null = null;
+import coachPersona from "@prompts/coach_persona";
 
 export async function buildCoachSystemInstruction(
 	assessment: string,
 	transcript: string,
 ): Promise<string> {
-	if (!cachedPersona) {
-		const personaPath = path.resolve(
-			process.cwd(),
-			"shared/prompts/coach_persona.txt",
-		);
-		cachedPersona = await fs.readFile(personaPath, "utf8");
-	}
-
 	return [
-		cachedPersona.trim(),
+		coachPersona.trim(),
 		"=== ASSESSMENT ===",
 		assessment || "(none provided)",
 		"=== TRANSCRIPT ===",
