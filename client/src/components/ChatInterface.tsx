@@ -43,15 +43,15 @@ export default function ChatInterface({
 		}
 	};
 
-	return (
-		<div className="flex flex-col h-full">
+		return (
+			<div className="flex flex-col h-full min-h-0">
 			<div className="border-b p-4 bg-card">
 				<h2 className="text-xl font-semibold" data-testid="text-patient-name">
 					Explore your assessment with our coaching agent
 				</h2>
 			</div>
 
-			<div className="flex-1 overflow-y-auto p-6 space-y-4">
+			<div className="flex-1 overflow-y-auto p-6 space-y-4 min-h-0">
 				<>
 					{messages.map((message) => (
 						<div
@@ -66,7 +66,11 @@ export default function ChatInterface({
 										: "bg-card border rounded-tl-sm"
 								}`}
 							>
-								<div className="prose prose-sm dark:prose-invert max-w-none">
+								<div
+									className={`prose prose-sm max-w-none ${
+										message.role === "user" ? "prose-invert" : "dark:prose-invert"
+									}`}
+								>
 									<ReactMarkdown remarkPlugins={[remarkGfm]}>
 										{message.content}
 									</ReactMarkdown>
@@ -85,7 +89,7 @@ export default function ChatInterface({
 						onChange={(e) => setInput(e.target.value)}
 						onKeyDown={handleKeyDown}
 						placeholder="Type your message..."
-						className="resize-none min-h-[60px]"
+						className="resize-none h-20 max-h-40 overflow-y-auto"
 						disabled={isLoading}
 						data-testid="input-message"
 					/>

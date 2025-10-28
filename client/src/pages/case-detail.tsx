@@ -99,12 +99,12 @@ export default function CaseDetail() {
 					{assessment && (
 					<div ref={secondRowRef} className="mt-8">
 							<TwoColumnRow
-								className="min-h-[70vh]"
+								split="1-1"
+								className="h-[70vh]"
 							left={
 									<AssessmentCard assessment={assessment} />
 							}
 							right={
-								<div className="bg-card border border-border rounded-xl p-6 shadow-card">
 									<ChatInterface
 										messages={chatMessages as any}
 										onSendMessage={async (text) => {
@@ -156,7 +156,6 @@ export default function CaseDetail() {
 										}}
 										isLoading={isChatLoading}
 									/>
-								</div>
 							}
 						/>
 					</div>
