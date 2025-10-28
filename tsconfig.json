@@ -19,7 +19,8 @@
       "@/*": ["./client/src/*"],
       "@shared/*": ["./shared/*"],
       "@server/*": ["./server/*"],
-      "@prompts/*": ["./shared/prompts/*"]
+      "@prompts/*": ["./shared/prompts/*"],
+      "@middleware/*": ["./server/middleware/*"]
     }
   }
 }
