@@ -1,0 +1,8 @@
+### Create a new assessment
+POST http://localhost:5000/api/assessment
+Content-Type: application/json
+
+{
+  "conversationId": "conv_3501k8c3kr6werjt8z23559x9yks",
+	"medicalCase": ""
+}

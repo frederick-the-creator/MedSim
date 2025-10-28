@@ -69,7 +69,7 @@ app.use((req, res, next) => {
 	// doesn't interfere with the other routes
 	if (app.get("env") === "development") {
 		await setupVite(app, server);
-	} else {
+	} else if (app.get("env") === "production") {
 		serveStatic(app);
 	}
 
@@ -78,13 +78,17 @@ app.use((req, res, next) => {
 	// this serves both the API and the client.
 	// It is the only port that is not firewalled.
 	const port = parseInt(process.env.PORT || "5000", 10);
-	server.listen(
-		{
-			port,
-			host: "0.0.0.0",
-		},
-		() => {
-			log(`serving on port ${port}`);
-		},
-	);
+	if (process.env.NODE_ENV !== "test") {
+		server.listen(
+			{
+				port,
+				host: "0.0.0.0",
+			},
+			() => {
+				log(`serving on port ${port}`);
+			},
+		);
+	}
 })();
+
+export default app;
