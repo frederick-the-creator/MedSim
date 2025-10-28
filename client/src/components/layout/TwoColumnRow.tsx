@@ -20,10 +20,10 @@ export default function TwoColumnRow({
 	const splitClass = split === "1-1" ? "lg:grid-cols-[1fr_1fr]" : "lg:grid-cols-[2fr_1fr]";
 	return (
 		<div className={`grid ${splitClass} gap-6 ${className ?? ""}`}>
-			<div className="left bg-card border border-border rounded-xl p-6 shadow-card animate-scale-in min-h-0">
+			<div className="left bg-card border border-border rounded-xl p-4 shadow-card animate-scale-in min-h-0">
 				{left}
 			</div>
-			<div className="right bg-card border border-border rounded-xl p-6 shadow-card animate-scale-in min-h-0">
+			<div className="right bg-card border border-border rounded-xl p-4 shadow-card animate-scale-in min-h-0">
 				{right}
 			</div>
 		</div>

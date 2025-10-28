@@ -77,7 +77,7 @@ export default function CaseDetail() {
 					}
 					right={
 						<VoiceAgentInterface
-							patientName={medicalCase.patientName}
+							patientName={medicalCase.vignette.background.patientName}
 							agentId={medicalCase.agentId}
 							onEndConversation={async (conversationId) => {
 										if (!conversationId) return;

@@ -15,6 +15,8 @@ interface CaseCardProps {
 }
 
 export default function CaseCard({ medicalCase, onStart }: CaseCardProps) {
+
+	const caseBackground = medicalCase.vignette.background
 	return (
 		<Card
 			className="hover-elevate transition-shadow duration-200 h-full flex flex-col"
@@ -26,8 +28,8 @@ export default function CaseCard({ medicalCase, onStart }: CaseCardProps) {
 						className="text-xl font-semibold mb-1"
 						data-testid={`text-patient-name-${medicalCase.id}`}
 					>
-						{medicalCase.patientName}, {medicalCase.age} year old{" "}
-						{medicalCase.gender}
+						{caseBackground.patientName}, {caseBackground.age} year old{" "}
+						{caseBackground.gender}
 					</h3>
 				</div>
 				<Badge
@@ -35,7 +37,7 @@ export default function CaseCard({ medicalCase, onStart }: CaseCardProps) {
 					className="w-fit uppercase tracking-wide text-xs font-medium"
 					data-testid={`badge-clinic-${medicalCase.id}`}
 				>
-					{medicalCase.clinicType}
+					{caseBackground.clinicType}
 				</Badge>
 			</CardHeader>
 
@@ -44,7 +46,7 @@ export default function CaseCard({ medicalCase, onStart }: CaseCardProps) {
 					className="text-sm leading-relaxed text-muted-foreground"
 					data-testid={`text-scenario-${medicalCase.id}`}
 				>
-					{medicalCase.scenario}
+					{caseBackground.scenario}
 				</p>
 			</CardContent>
 
