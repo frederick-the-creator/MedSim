@@ -1,4 +1,5 @@
 import { MOCK_VOICE_AGENT } from "@/lib/config";
+import { MedicalCase } from "@shared/schema";
 import type { Assessment } from "@shared/schemas/assessment";
 
 type AssessmentResult = {
@@ -10,6 +11,7 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export async function fetchAssessment(
 	conversationId: string,
+	medicalCase: MedicalCase,
 ): Promise<AssessmentResult> {
 	if (MOCK_VOICE_AGENT) {
 		// Simulate 5s backend processing delay in mock mode
@@ -149,7 +151,7 @@ export async function fetchAssessment(
 	const resp = await fetch("/api/assessment", {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify({ conversationId }),
+		body: JSON.stringify({ conversationId, medicalCase }),
 	});
 	if (!resp.ok) {
 		const errJson = await resp.json().catch(() => ({}) as any);

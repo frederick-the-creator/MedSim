@@ -83,7 +83,7 @@ export default function CaseDetail() {
 										if (!conversationId) return;
 										try {
 											setIsAssessmentLoading(true);
-											const result = await fetchAssessment(conversationId);
+											const result = await fetchAssessment(conversationId, medicalCase);
 											setAssessment(result.assessment);
 											setTranscript(result.transcript);
 										} catch (e: any) {

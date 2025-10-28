@@ -5,13 +5,17 @@ import { z } from "zod";
 import assessmentSystem from "@prompts/assessment_system";
 import { buildCoachSystemInstruction } from "./promptBuilder";
 import { Assessment, AssessmentSchema } from "@shared/schemas/assessment";
+import { MedicalCase } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
 	// prefix all routes with /api
 
 	app.post("/api/assessment", async (req, res, next) => {
 		try {
-			const { conversationId } = req.body as { conversationId?: string };
+			const { conversationId, medicalCase } = req.body as {
+				conversationId?: string;
+				medicalCase?: MedicalCase;
+			};
 			if (!conversationId) {
 				return res.status(400).json({ message: "conversationId required" });
 			}
@@ -22,10 +26,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 				return res.status(409).json({ message: "Transcript not ready" });
 			}
 
+			const medicalCaseString = JSON.stringify(medicalCase);
 			const systemInstruction = assessmentSystem;
 			const assessment = await assessWithGemini({
-				transcript,
 				systemInstruction,
+				medicalCase: medicalCaseString,
+				transcript,
 			});
 
 			return res.json({ transcript, assessment });
@@ -172,22 +178,19 @@ function isAssessment(value: unknown): value is Assessment {
 }
 
 async function assessWithGemini(input: {
-	transcript: string;
 	systemInstruction: string;
+	medicalCase: string;
+	transcript: string;
 }): Promise<Assessment> {
-	const { transcript, systemInstruction } = input;
+	const { systemInstruction, medicalCase, transcript } = input;
+
 	const apiKey = process.env.GEMINI_API_KEY;
 	if (!apiKey) throw new Error("GEMINI_API_KEY missing");
 
 	const { GoogleGenAI } = await import("@google/genai");
 	const ai = new GoogleGenAI({ apiKey });
 
-	const contents = [
-		{
-			role: "user",
-			parts: [{ text: transcript }],
-		},
-	];
+	const contents = [{ text: medicalCase }, { text: transcript }];
 	const response = await ai.models.generateContent({
 		config: {
 			systemInstruction,
