@@ -4,6 +4,7 @@ import fs from "fs/promises";
 import path from "path";
 import { z } from "zod";
 import { buildCoachSystemInstruction } from "./promptBuilder";
+import { Assessment, AssessmentSchema } from "@shared/schemas/assessment";
 
 export async function registerRoutes(app: Express): Promise<Server> {
 	// prefix all routes with /api
@@ -21,10 +22,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 				return res.status(409).json({ message: "Transcript not ready" });
 			}
 
-			const systemInstructions = await loadSystemPrompt();
+			const systemInstruction = await loadSystemPrompt();
 			const assessment = await assessWithGemini({
 				transcript,
-				systemInstructions,
+				systemInstruction,
 			});
 
 			return res.json({ transcript, assessment });
@@ -54,8 +55,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 			const apiKey = process.env.GEMINI_API_KEY;
 			if (!apiKey) throw new Error("GEMINI_API_KEY missing");
 
-			const { GoogleGenerativeAI } = await import("@google/generative-ai");
-			const genAI = new GoogleGenerativeAI(apiKey);
+			const { GoogleGenAI } = await import("@google/genai");
+			const ai = new GoogleGenAI({ apiKey });
 
 			const systemInstruction = await buildCoachSystemInstruction(
 				body.assessment ?? "",
@@ -68,19 +69,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 				parts: [{ text: m.content }],
 			}));
 
-			const model = genAI.getGenerativeModel({
+			const response = await ai.models.generateContentStream({
+				config: {
+					systemInstruction,
+				},
+				contents,
 				model: "gemini-2.0-flash",
-				systemInstruction,
 			});
-			const result = await model.generateContentStream({ contents });
 
 			res.setHeader("Content-Type", "text/plain; charset=utf-8");
 			res.setHeader("Transfer-Encoding", "chunked");
 			res.setHeader("Cache-Control", "no-cache");
 			res.setHeader("X-Accel-Buffering", "no");
 
-			for await (const chunk of result.stream) {
-				const text = chunk.text();
+			for await (const chunk of response) {
+				const text = chunk.text;
 				if (text) {
 					res.write(text);
 				}
@@ -159,20 +162,57 @@ async function loadSystemPrompt(): Promise<string> {
 	return await fs.readFile(promptPath, "utf8");
 }
 
+function isNonNullObject(value: unknown): value is Record<string, unknown> {
+	return typeof value === "object" && value !== null;
+}
+
+function isAssessment(value: unknown): value is Assessment {
+	if (!isNonNullObject(value)) return false;
+	const v = value;
+	const hasMaxTotal = typeof v.max_total === "number";
+	const dims = v.dimensions;
+	const hasDimensions = Array.isArray(dims);
+	const totalsOk = isNonNullObject(v.totals);
+	const feedbackOk = isNonNullObject(v.overall_feedback);
+	return hasMaxTotal && hasDimensions && totalsOk && feedbackOk;
+}
+
 async function assessWithGemini(input: {
 	transcript: string;
-	systemInstructions: string;
-}): Promise<string> {
-	const { transcript, systemInstructions } = input;
+	systemInstruction: string;
+}): Promise<Assessment> {
+	const { transcript, systemInstruction } = input;
 	const apiKey = process.env.GEMINI_API_KEY;
 	if (!apiKey) throw new Error("GEMINI_API_KEY missing");
 
-	const { GoogleGenerativeAI } = await import("@google/generative-ai");
-	const genAI = new GoogleGenerativeAI(apiKey);
-	const model = genAI.getGenerativeModel({
-		model: "gemini-2.0-flash",
-		systemInstruction: systemInstructions,
+	const { GoogleGenAI } = await import("@google/genai");
+	const ai = new GoogleGenAI({ apiKey });
+
+	const contents = [
+		{
+			role: "user",
+			parts: [{ text: transcript }],
+		},
+	];
+	const response = await ai.models.generateContent({
+		config: {
+			systemInstruction,
+			responseMimeType: "application/json",
+			responseJsonSchema: AssessmentSchema,
+		},
+		contents,
+		model: "gemini-2.5-pro",
 	});
-	const result = await model.generateContent(transcript);
-	return result.response.text();
+
+	// Safely extract JSON text from response without assertions
+	const safeText = response.text ?? "{}";
+	const parsedResponse: unknown = JSON.parse(safeText);
+	console.log("Parsed Response");
+	console.log(parsedResponse);
+
+	if (!isAssessment(parsedResponse)) {
+		throw new Error("Model returned invalid assessment JSON");
+	}
+
+	return parsedResponse;
 }

@@ -9,12 +9,15 @@ import { fetchAssessment } from "@/lib/assessment";
 import { postChatAndStream } from "@/lib/chat";
 import ChatInterface from "@/components/ChatInterface";
 import { medicalCases } from "@shared/cases";
+import type { Assessment } from "@shared/schemas/assessment";
+import AssessmentCard from "@/components/AssessmentCard";
+ 
 
 export default function CaseDetail() {
 	const [, params] = useRoute("/case/:id");
 	const [, setLocation] = useLocation();
 	const [isAssessmentLoading, setIsAssessmentLoading] = useState(false);
-	const [assessment, setAssessment] = useState<string | null>(null);
+	const [assessment, setAssessment] = useState<Assessment | null>(null);
 	const [transcript, setTranscript] = useState<string | null>(null);
 	const [chatMessages, setChatMessages] = useState([] as any[]);
 	const [isChatLoading, setIsChatLoading] = useState(false);
@@ -93,13 +96,12 @@ export default function CaseDetail() {
 					}
 				/>
 
-				{assessment && (
+					{assessment && (
 					<div ref={secondRowRef} className="mt-8">
-						<TwoColumnRow
+							<TwoColumnRow
+								className="min-h-[70vh]"
 							left={
-								<div className="bg-card border border-border rounded-xl p-6 shadow-card whitespace-pre-wrap text-sm text-foreground">
-									{assessment}
-								</div>
+									<AssessmentCard assessment={assessment} />
 							}
 							right={
 								<div className="bg-card border border-border rounded-xl p-6 shadow-card">
@@ -130,7 +132,7 @@ export default function CaseDetail() {
 													(m: any) => ({ role: m.role, content: m.content }),
 												),
 												transcript: transcript ?? "",
-												assessment: assessment ?? "",
+												assessment: assessment ? JSON.stringify(assessment) : "",
 											};
 											await postChatAndStream(body, (acc) => {
 												setChatMessages((prev: any[]) =>

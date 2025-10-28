@@ -1,0 +1,137 @@
+{
+	"max_total": 49.8,
+	"dimensions": [
+		{
+			"name": "Rapport, introduction, structure and flow",
+			"raw_score_0_to_100": 75,
+			"weighted_score": 9.98,
+			"evidence": [
+				"Hi there. My name is Rohan. I'm one of the ophthalmology doctors.",
+				"Before we start, can I just confirm your name and date of birth, please?",
+				"So I understand you've been coming in with some eye pain. Is that right?",
+				"Alright, Andrew. From what what I can from what I can see in your examination findings and the history history that you've told me, I think what you've got is a condition called acute angle closure.",
+				"I know that's a lot of information about what the condition is, and do need to let you know this is something that we need to get on top of quite quickly to help reduce the pressure in your eye.",
+				"I know this is a lot of information to take take into account.",
+				"But is there anything else you're concerned about, or do you have any other questions?"
+			],
+			"strengths": [
+				"Introduces self and role",
+				"Confirms patient details",
+				"Identifies and addresses the patient's chief complaint",
+				"Provides a summary of findings and diagnosis.",
+				"Uses signposting to explain treatment plan."
+			],
+			"improvements": [
+				"The explanation of the condition and treatment plan could be better structured and signposted.",
+				"The interview flow could be more structured, with clear transitions between different parts of the consultation."
+			],
+			"insufficient_evidence": false,
+			"red_flags": []
+		},
+		{
+			"name": "Empathy, listening and patient perspective",
+			"raw_score_0_to_100": 70,
+			"weighted_score": 9.31,
+			"evidence": [
+				"I'm really sorry that you've been going through that.",
+				"Are you able to just tell me a bit more about this?",
+				"I'm really sorry about that.",
+				"I understand you're in a lot of pain at the moment, and the vision is, become a bit blur blurry. How's this I know it's not been too long, but how has this been affecting your life?",
+				"Is there anything else you're concerned about, or do you have any other questions?",
+				"I mean, it's mainly the pain and then hopefully getting better."
+			],
+			"strengths": [
+				"Expresses sympathy for the patient's pain.",
+				"Asks open-ended questions to encourage the patient to share more about their experience.",
+				"Acknowledges the impact of the condition on the patient's life."
+			],
+			"improvements": [
+				"Could explore the patient's emotional response to the condition more deeply.",
+				"Could actively check for and address patient expectations.",
+				"Does not directly address how the condition affects the patient's life until prompted."
+			],
+			"insufficient_evidence": false,
+			"red_flags": []
+		},
+		{
+			"name": "Medical explanation and plan",
+			"raw_score_0_to_100": 65,
+			"weighted_score": 6.47,
+			"evidence": [
+				"I think what you've got is a condition called acute angle closure.",
+				"So, essentially, what happens in this case is the basically, your eye has certain channels which strain specific some fluid in the back of the eye, back into your bloodstream, essentially.",
+				"Now in some instances where the pressure is very high, it can sometimes damage the nerve connecting your the back of the eye, which is called the retina, to your brain, so it can sometimes cause some deterioration in your vision.",
+				"So what I'll do is of this, we're gonna start you on some medications. So we're gonna start you on some intravenous medications to help reduce the pressure.",
+				"And what we'll we'll likely need to keep you in hospital to monitor your symptoms and regularly check."
+			],
+			"strengths": [
+				"Provides a clear diagnosis (acute angle closure).",
+				"Explains the underlying mechanism in understandable terms.",
+				"Outlines a treatment plan, including medication and monitoring.",
+				"Includes safety-netting by mentioning monitoring."
+			],
+			"improvements": [
+				"Could provide more detail on the risks and benefits of the treatment.",
+				"Could offer written information or online resources.",
+				"Could offer more thorough explanation of the risks and benefits of the laser procedure."
+			],
+			"insufficient_evidence": false,
+			"red_flags": []
+		},
+		{
+			"name": "Honesty and transparency",
+			"raw_score_0_to_100": 80,
+			"weighted_score": 2.66,
+			"evidence": [
+				"Now I know that's a lot of information about what the condition is, and do need to let you know this is something that we need to get on top of quite quickly to help reduce the pressure in your eye.",
+				"So it's difficult to say right now.",
+				"I will need to speak with my senior consultant as well about the situation and see if there's anything else we can do at this moment in time."
+			],
+			"strengths": [
+				"Acknowledges that there is a lot of information.",
+				"Admits uncertainty about long-term prognosis.",
+				"States intention to consult with a senior colleague."
+			],
+			"improvements": [
+				"Could explicitly state the limitations of the current knowledge."
+			],
+			"insufficient_evidence": false,
+			"red_flags": []
+		},
+		{
+			"name": "Appropriate pace and non-verbal skills",
+			"raw_score_0_to_100": 75,
+			"weighted_score": 7.47,
+			"evidence": ["Yeah.", "Okay.", "Mhmm.", "Alright, Andrew. Take care."],
+			"strengths": [
+				"Maintains a generally steady pace.",
+				"Uses empathetic tone.",
+				"Appropriate pauses to check understanding and give the patient time to respond."
+			],
+			"improvements": [
+				"There is some use of filler words (e.g., 'Okay').",
+				"The non-verbal skills could be improved by adding further details.",
+				"Further details of non-verbal communication are absent from the transcription."
+			],
+			"insufficient_evidence": false,
+			"red_flags": []
+		}
+	],
+	"totals": {
+		"total_score": 36.89,
+		"percentage": 74.1
+	},
+	"overall_feedback": {
+		"summary": "The candidate demonstrates a good understanding of the condition and provides a clear explanation of the diagnosis and treatment plan. They show empathy towards the patient and acknowledge the uncertainty associated with the condition. The interview could benefit from improved structure and more proactive exploration of the patient's perspective.",
+		"keep_doing": [
+			"Establishing rapport with the patient and showing empathy.",
+			"Providing clear explanations of the diagnosis and treatment.",
+			"Acknowledging uncertainties and limitations."
+		],
+		"priorities_for_next_time": [
+			"Improve the structure and flow of the interview, using signposting effectively.",
+			"Actively explore the patient's concerns, expectations, and the impact of the condition on their life.",
+			"Provide a more detailed and structured explanation of the treatment plan, including potential risks and benefits."
+		]
+	}
+}

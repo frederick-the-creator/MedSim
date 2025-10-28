@@ -13,7 +13,7 @@ export default function TwoColumnRow({
 }: TwoColumnRowProps) {
 	return (
 		<div className={`grid lg:grid-cols-[2fr_1fr] gap-6 ${className ?? ""}`}>
-			<div className="left bg-card border border-border rounded-xl p-6 shadow-card animate-scale-in">
+			<div className="left bg-card border border-border rounded-xl p-6 shadow-card animate-scale-in min-h-0">
 				{left}
 			</div>
 			<div className="right bg-card border border-border rounded-xl p-6 shadow-card animate-scale-in">
