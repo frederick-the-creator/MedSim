@@ -110,9 +110,6 @@ export async function assessWithGemini(input: {
 
 	const contents = [{ text: medicalCase }, { text: transcript }];
 
-	console.log("AssessmentSchema");
-	console.dir(AssessmentSchema, { depth: null });
-
 	const maxAttempts = 3;
 	for (let attempt = 1; attempt <= maxAttempts; attempt++) {
 		const extraReminder =
@@ -140,8 +137,6 @@ export async function assessWithGemini(input: {
 		} catch (e) {
 			console.warn("Failed to parse model JSON (attempt", attempt, ")");
 		}
-		console.log("Parsed Response");
-		console.log(parsedResponse);
 
 		const normalized = normalizeAssessment(parsedResponse);
 		if (normalized && isAssessment(normalized)) {
