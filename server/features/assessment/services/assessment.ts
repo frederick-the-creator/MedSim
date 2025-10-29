@@ -95,6 +95,112 @@ export async function fetchTranscriptFromElevenLabs(
 
 // removed file I/O prompt loader; using module import instead
 
+// --- Gemini assessment helpers (single-attempt request, validation, retries) ---
+
+type GenAIClient = {
+	models: {
+		generateContent: (args: any) => Promise<{
+			text?: string;
+		}>;
+	};
+};
+
+interface GeminiRetryConfig {
+	maxAttempts: number;
+	initialDelayMs: number;
+	delayIncrementMs: number;
+}
+
+function buildEffectiveSystemInstruction(
+	base: string,
+	attempt: number,
+): string {
+	return attempt === 1
+		? base
+		: `${base}\n\nReminder: Your previous output failed JSON Schema validation. Output MUST match the schema exactly. Do NOT add extra fields. Include all required fields even if empty/false.`;
+}
+
+async function requestAssessmentJson(
+	ai: GenAIClient,
+	contents: { text: string }[],
+	systemInstruction: string,
+	model: string,
+	schema: unknown,
+): Promise<{ rawText: string; parsed: unknown }> {
+	const response = await ai.models.generateContent({
+		config: {
+			systemInstruction,
+			responseMimeType: "application/json",
+			responseJsonSchema: schema,
+		},
+		contents,
+		model,
+	});
+
+	const safeText = response?.text ?? "{}";
+	let parsed: unknown = {};
+	try {
+		parsed = JSON.parse(safeText);
+	} catch {
+		// swallow parse error; caller handles validation failures
+	}
+	return { rawText: safeText, parsed };
+}
+
+function validateAndNormalizeAssessment(candidate: unknown): Assessment | null {
+	const normalized = normalizeAssessment(candidate);
+	if (normalized && isAssessment(normalized)) return normalized;
+	return null;
+}
+
+async function generateAssessmentWithRetries(
+	ai: GenAIClient,
+	contents: { text: string }[],
+	baseSystemInstruction: string,
+	schema: unknown,
+	model: string,
+	cfg: Partial<GeminiRetryConfig> = {},
+): Promise<Assessment> {
+	const { maxAttempts, initialDelayMs, delayIncrementMs } = {
+		maxAttempts: 3,
+		initialDelayMs: 300,
+		delayIncrementMs: 200,
+		...cfg,
+	};
+
+	for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+		const effectiveSystemInstruction = buildEffectiveSystemInstruction(
+			baseSystemInstruction,
+			attempt,
+		);
+
+		const { rawText, parsed } = await requestAssessmentJson(
+			ai,
+			contents,
+			effectiveSystemInstruction,
+			model,
+			schema,
+		);
+
+		const validated = validateAndNormalizeAssessment(parsed);
+		if (validated) return validated;
+
+		const preview = rawText.slice(0, 500);
+		console.warn(
+			`Assessment JSON failed validation (attempt ${attempt}/${maxAttempts}). Preview:`,
+			preview,
+		);
+
+		if (attempt < maxAttempts) {
+			await new Promise((r) =>
+				setTimeout(r, initialDelayMs + attempt * delayIncrementMs),
+			);
+		}
+	}
+
+	throw new Error("Model returned invalid assessment JSON after retries");
+}
+
 export async function assessWithGemini(input: {
 	systemInstruction: string;
 	medicalCase: string;
@@ -111,53 +217,15 @@ export async function assessWithGemini(input: {
 	}
 
 	const { GoogleGenAI } = await import("@google/genai");
-	const ai = new GoogleGenAI({ apiKey });
-
+	const ai = new GoogleGenAI({ apiKey }) as unknown as GenAIClient;
 	const contents = [{ text: medicalCase }, { text: transcript }];
 
-	const maxAttempts = 3;
-	for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-		const extraReminder =
-			attempt === 1
-				? ""
-				: "\n\nReminder: Your previous output failed JSON Schema validation. Output MUST match the schema exactly. Do NOT add extra fields. Include all required fields even if empty/false.";
-
-		const effectiveSystemInstruction = `${systemInstruction}${extraReminder}`;
-
-		const response = await ai.models.generateContent({
-			config: {
-				systemInstruction: effectiveSystemInstruction,
-				responseMimeType: "application/json",
-				responseJsonSchema: AssessmentSchema,
-			},
-			contents,
-			model: "gemini-2.5-pro",
-		});
-
-		// Safely extract JSON text from response without assertions
-		const safeText = response.text ?? "{}";
-		let parsedResponse: unknown = {};
-		try {
-			parsedResponse = JSON.parse(safeText);
-		} catch (e) {
-			console.warn("Failed to parse model JSON (attempt", attempt, ")");
-		}
-
-		const normalized = normalizeAssessment(parsedResponse);
-		if (normalized && isAssessment(normalized)) {
-			return normalized;
-		}
-
-		const preview = safeText.slice(0, 500);
-		console.warn(
-			`Assessment JSON failed validation (attempt ${attempt}/${maxAttempts}). Preview:`,
-			preview,
-		);
-
-		if (attempt < maxAttempts) {
-			await new Promise((r) => setTimeout(r, 300 + attempt * 200));
-		}
-	}
-
-	throw new Error("Model returned invalid assessment JSON after retries");
+	return generateAssessmentWithRetries(
+		ai,
+		contents,
+		systemInstruction,
+		AssessmentSchema,
+		"gemini-2.5-pro",
+		{ maxAttempts: 3, initialDelayMs: 300, delayIncrementMs: 200 },
+	);
 }
