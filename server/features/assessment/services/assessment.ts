@@ -103,7 +103,12 @@ export async function assessWithGemini(input: {
 	const { systemInstruction, medicalCase, transcript } = input;
 
 	const apiKey = process.env.GEMINI_API_KEY;
-	if (!apiKey) throw new Error("GEMINI_API_KEY missing");
+	if (!apiKey) {
+		console.error("❌ No GOOGLE_API_KEY found in environment!");
+	} else {
+		const keyPreview = `${apiKey.slice(0, 6)}...${apiKey.slice(-4)}`;
+		console.log(`Using Google API key: ${keyPreview}`);
+	}
 
 	const { GoogleGenAI } = await import("@google/genai");
 	const ai = new GoogleGenAI({ apiKey });
