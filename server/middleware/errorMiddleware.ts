@@ -19,24 +19,30 @@ export function errorMiddleware(
 	}
 
 	// Gemini (Google GenAI) upstream error normalization
-	// @google/genai throws an ApiError with shape { error: { code, status, message } }
+	// @google/genai throws ApiError which extends Error and includes a numeric `status`.
 	const anyErr = err as any;
-	const isGeminiApiError =
-		anyErr?.name === "ApiError" ||
-		(anyErr?.error && typeof anyErr.error?.message === "string");
-	if (isGeminiApiError) {
-		const { code, status, message } = anyErr.error ?? {};
+	const isGenaiApiError =
+		anyErr?.name === "ApiError" || typeof anyErr?.status === "number";
+
+	if (isGenaiApiError) {
+		// Extract directly from the ApiError instance (top-level fields)
+		const name = typeof anyErr?.name === "string" ? anyErr.name : "ApiError";
+		const status =
+			typeof anyErr?.status === "number" ? anyErr.status : undefined;
+		const message =
+			typeof anyErr?.message === "string" ? anyErr.message : undefined;
+		// Keep keys even if values are undefined (per plan)
 		console.error("[errorMiddleware] Gemini API error", {
 			context: (res as any).locals?.context,
 			provider: "google-genai",
+			name,
 			status,
-			code,
 			message,
 		});
 		res.status(502).json({
 			error: "Upstream API error",
 			provider: "google-genai",
-			code,
+			name,
 			status,
 			message,
 		});
