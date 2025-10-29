@@ -1,5 +1,5 @@
 import assessmentSystem from "@prompts/assessment_system";
-import { MedicalCase } from "@shared/schema";
+import { parseAssessmentRequestBody } from "@server/shared/utils/validation";
 import {
 	fetchTranscriptFromElevenLabs,
 	assessWithGemini,
@@ -11,15 +11,7 @@ export async function assessmentRoute(
 	res: Response,
 	next: NextFunction,
 ): Promise<void> {
-	const { conversationId, medicalCase } = req.body as {
-		conversationId?: string;
-		medicalCase?: MedicalCase;
-	};
-
-	if (!conversationId) {
-		res.status(400).json({ message: "conversationId required" });
-		return;
-	}
+	const { conversationId, medicalCase } = parseAssessmentRequestBody(req.body);
 
 	const transcript = await fetchTranscriptFromElevenLabs(conversationId);
 
