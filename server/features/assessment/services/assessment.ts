@@ -13,7 +13,7 @@ interface ElevenConversationResponse {
 	transcript?: ElevenTranscriptItem[] | string | null;
 }
 
-export async function fetchTranscriptFromElevenLabs(
+async function getElevenTranscriptOnce(
 	conversationId: string,
 ): Promise<string> {
 	const apiKey = process.env.ELEVENLABS_API_KEY;
@@ -33,7 +33,7 @@ export async function fetchTranscriptFromElevenLabs(
 
 	// Ensure conversation has finished processing
 	if (json.status && json.status !== "done") {
-		return ""; // trigger 409 upstream
+		return ""; // not ready yet
 	}
 
 	// Handle both array and string forms defensively
@@ -55,6 +55,41 @@ export async function fetchTranscriptFromElevenLabs(
 	}
 
 	return "";
+}
+
+async function pollTranscriptWithBackoff(
+	conversationId: string,
+	cfg: { maxMs: number; baseMs: number; maxDelayMs: number },
+): Promise<string> {
+	const deadline = Date.now() + cfg.maxMs;
+	let attempt = 0;
+	let transcript = "";
+	while (Date.now() < deadline) {
+		console.log("Pollint Transcript");
+		transcript = await getElevenTranscriptOnce(conversationId);
+		if (transcript) break;
+		const delay = Math.floor(
+			Math.random() * Math.min(cfg.maxDelayMs, cfg.baseMs * 2 ** attempt),
+		);
+		if (delay > 0) {
+			await new Promise((r) => setTimeout(r, delay));
+		}
+		attempt++;
+	}
+	return transcript; // "" if not ready within budget
+}
+
+export async function fetchTranscriptFromElevenLabs(
+	conversationId: string,
+): Promise<string> {
+	const maxMs = Number(process.env.ASSESSMENT_POLL_MAX_MS ?? 10000);
+	const baseMs = Number(process.env.ASSESSMENT_POLL_BASE_MS ?? 300);
+	const maxDelayMs = Number(process.env.ASSESSMENT_POLL_MAX_DELAY_MS ?? 3000);
+	return pollTranscriptWithBackoff(conversationId, {
+		maxMs,
+		baseMs,
+		maxDelayMs,
+	});
 }
 
 // removed file I/O prompt loader; using module import instead
