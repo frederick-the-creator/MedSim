@@ -12,7 +12,8 @@ describe("POST /api/assessment", () => {
 			.set("Content-Type", "application/json")
 			.send({ conversationId, medicalCase });
 
-		console.log("API response", res);
+		console.log("Transcript:", res.body.transcript);
+		console.log("Assessment:", res.body.assessment);
 		expect(res.status).toBeLessThan(500); // adjust to your route’s expected status (e.g., 200)
 		// optionally assert on response shape if your route returns something
 	}, 50000);

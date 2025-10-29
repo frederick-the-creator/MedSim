@@ -1,4 +1,5 @@
 import { Assessment, AssessmentSchema } from "@shared/schemas/assessment";
+import { isAssessment } from "@server/shared/utils/validation";
 
 interface ElevenTranscriptItem {
 	role: "user" | "agent" | string;
@@ -58,21 +59,6 @@ export async function fetchTranscriptFromElevenLabs(
 
 // removed file I/O prompt loader; using module import instead
 
-function isNonNullObject(value: unknown): value is Record<string, unknown> {
-	return typeof value === "object" && value !== null;
-}
-
-function isAssessment(value: unknown): value is Assessment {
-	if (!isNonNullObject(value)) return false;
-	const v = value;
-	const hasMaxTotal = typeof v.max_total === "number";
-	const dims = v.dimensions;
-	const hasDimensions = Array.isArray(dims);
-	const totalsOk = isNonNullObject(v.totals);
-	const feedbackOk = isNonNullObject(v.overall_feedback);
-	return hasMaxTotal && hasDimensions && totalsOk && feedbackOk;
-}
-
 export async function assessWithGemini(input: {
 	systemInstruction: string;
 	medicalCase: string;
@@ -87,6 +73,7 @@ export async function assessWithGemini(input: {
 	const ai = new GoogleGenAI({ apiKey });
 
 	const contents = [{ text: medicalCase }, { text: transcript }];
+
 	const response = await ai.models.generateContent({
 		config: {
 			systemInstruction,

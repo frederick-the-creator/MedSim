@@ -17,130 +17,94 @@ export async function fetchAssessment(
 		// Simulate 5s backend processing delay in mock mode
 		await delay(5000);
 		const mockAssessment: Assessment = {
-			max_total: 49.8,
 			dimensions: [
 				{
 					name: "Rapport, introduction, structure and flow",
-					raw_score_0_to_100: 82,
-					weighted_score: 10.91,
-					evidence: [
-						'"I\'m Eliana de Mondon, an SD1 registrar here in the I Department..."',
-						'"...and I\'d just like to go through quickly what brought you here and then explain what we think the impression is."',
-						'Patient: "Could we go step by step?" User: "Okay, all right. So as I said earlier, we\'ll do the corneal scrape..."',
-					],
-					strengths: [
-						"Provided a clear introduction with name and role.",
-						"Set a basic agenda at the start of the consultation.",
-						"Followed a logical structure, moving from history-taking to explanation and then management.",
-						"Responded well to the patient's request to repeat the plan step-by-step.",
-					],
-					improvements: [
-						'The opening agenda felt slightly rushed with the word "quickly".',
-						"There was a minor interruption at the very beginning of the patient's opening statement.",
-						"A concluding summary before asking for questions would have rounded off the structure nicely.",
+					points: [
+						{
+							type: "strength",
+							text: '"Hello, I\'m..." established a clear introduction and role.',
+						},
+						{
+							type: "strength",
+							text: 'You signposted: "Next, I\'ll explain..." which aided structure.',
+						},
+						{
+							type: "improvement",
+							text: 'Consider a brief closing summary: "To recap, we\'ll..."',
+						},
 					],
 					insufficient_evidence: false,
 					red_flags: [],
 				},
 				{
 					name: "Empathy, listening and patient perspective",
-					raw_score_0_to_100: 75,
-					weighted_score: 9.98,
-					evidence: [
-						'"I see, okay. It seems like you\'re really going through a lot."',
-						"\"You mentioned this twice now. Is there anything in specific that you're thinking of that's making you frightened?\"",
-						'Patient: "I’m scared about my sight on that side." User: "I see. Was there any specific condition that you were thinking of?"',
-					],
-					strengths: [
-						"Acknowledged the patient's distress early on.",
-						"Offered practical comfort in the form of analgesia for the patient's pain.",
-						"Effectively picked up on the patient's repeated expressions of fear and sought to explore the concern further.",
-					],
-					improvements: [
-						"When the patient revealed their core fear was about losing their sight, the response was to ask about a specific condition rather than directly validating the fear of sight loss itself. This was a missed opportunity for a deeper empathic connection.",
-						"Could have explored the patient's ideas or expectations about the problem more fully.",
+					points: [
+						{
+							type: "strength",
+							text: 'Validated emotion: "I can see this is worrying for you."',
+						},
+						{
+							type: "improvement",
+							text: 'When patient said "I\'m scared about my sight", explicitly reflect and explore this fear.',
+						},
 					],
 					insufficient_evidence: false,
 					red_flags: [],
 				},
 				{
 					name: "Medical explanation and plan",
-					raw_score_0_to_100: 88,
-					weighted_score: 8.76,
-					evidence: [
-						'"...in the cornea of your eye which is the front transparent dome-like layer uh there is a defect there..."',
-						'"So with this defect that you call this, we call this a corneal ulcer..."',
-						'"...we will start you on hourly antibiotics called moxifloxacin."',
-						'"...if you feel like your symptoms are getting worse... then by all means, please come back to our A&E."',
-						'"...let me just run this case with my consultant and I\'ll give you also a leaflet about corneal ulcers."',
-					],
-					strengths: [
-						"Provided an excellent, jargon-free explanation of the cornea.",
-						"Gave a clear diagnosis and a clinically appropriate, robust management plan (scrape, hourly antibiotics, follow-up).",
-						"Included excellent safety-netting, both by involving a consultant and by giving clear advice on when to return.",
-						"Offered written information via a leaflet.",
-					],
-					improvements: [
-						"The initial explanation of the pathophysiology had some verbal hesitancy (\"that's that's uh that's um that's causing your symptoms\").",
-						"The consultation did not explicitly mention checking the patient's visual acuity, which is a key step in the assessment of this condition.",
+					points: [
+						{
+							type: "strength",
+							text: 'Gave clear plan: "We\'ll start hourly antibiotic drops."',
+						},
+						{
+							type: "strength",
+							text: 'Included safety-netting: "If symptoms worsen, please return to A&E."',
+						},
+						{
+							type: "improvement",
+							text: "Reduce jargon; chunk-and-check understanding after key points.",
+						},
 					],
 					insufficient_evidence: false,
 					red_flags: [],
 				},
 				{
 					name: "Honesty and transparency",
-					raw_score_0_to_100: 95,
-					weighted_score: 3.15,
-					evidence: ['"...let me just run this case with my consultant..."'],
-					strengths: [
-						"Demonstrated excellent awareness of limitations and commitment to patient safety by explicitly stating the plan to discuss the case with a senior consultant.",
-						"Avoided making definitive promises about outcomes.",
-						"Was transparent about the diagnostic process (sending scrapes to the lab).",
-					],
-					improvements: [
-						"This was a very strong performance in this domain with no significant areas for improvement.",
+					points: [
+						{
+							type: "strength",
+							text: 'Acknowledged limits: "I\'ll discuss with my consultant."',
+						},
 					],
 					insufficient_evidence: false,
 					red_flags: [],
 				},
 				{
-					name: "Appropriate pace and non-verbal skills",
-					raw_score_0_to_100: 70,
-					weighted_score: 6.97,
-					evidence: [
-						'User interrupts patient: "Hi, thanks."',
-						'Repeats question when patient is struggling: "Was there any specific condition that you were thinking of?"',
-					],
-					strengths: [
-						"The overall pace of the consultation was steady and not rushed.",
-						"Allowed appropriate pauses for the patient to respond.",
-						"Adjusted the pace by repeating the management plan when the patient requested it.",
-					],
-					improvements: [
-						"Interrupted the patient at the very beginning of the consultation.",
-						"There was some use of verbal fillers ('um', 'uh') which slightly reduced fluency.",
-						"Repeating the same question when the patient stated their pain was making it hard to focus showed a slight lack of attunement to their immediate difficulty.",
+					name: "Appropriate pace",
+					points: [
+						{
+							type: "strength",
+							text: "Balanced pace overall; allowed patient to speak without interruption.",
+						},
+						{
+							type: "improvement",
+							text: 'At start, avoid cutting in; the patient said "..." before being interrupted.',
+						},
 					],
 					insufficient_evidence: false,
 					red_flags: [],
 				},
 			],
-			totals: {
-				total_score: 39.77,
-				percentage: 79.9,
-			},
-			overall_feedback: {
-				summary:
-					"This was a competent and safe consultation demonstrating a logical structure and a strong, safe management plan. The candidate communicated the diagnosis and plan clearly using accessible language. Key strengths included the excellent safety-netting and the explicit plan to involve a senior consultant. Areas for development centre on refining empathic communication to directly validate patient fears, rather than deflecting to clinical specifics, and polishing the conversational flow to avoid minor interruptions.",
-				keep_doing: [
-					"Explicitly stating that you will discuss the case with a consultant; this is a hallmark of a safe junior doctor.",
-					'Using simple, jargon-free analogies (e.g., "front transparent dome-like layer") to explain medical concepts.',
-					"Providing clear safety-netting advice, including when and where the patient should return if things worsen.",
-				],
-				priorities_for_next_time: [
-					'When a patient expresses a core fear (e.g., "I\'m scared about my sight"), aim to validate that emotion directly before exploring it further (e.g., "It is completely understandable to be worried about your vision when you have these symptoms.").',
-					"Ensure you do not interrupt the patient, particularly in their opening statement, to build rapport effectively from the start.",
-					"Conclude the consultation with a brief summary of the plan before asking if the patient has any questions to ensure everything is clear.",
+			summary: {
+				free_text:
+					"Clear structure and safe plan with good safety-netting. Empathy present but could more directly validate core fears about sight. Maintain steady pacing and finish with a concise summary and check understanding.",
+				bullet_points: [
+					"Validate and explore expressed fears explicitly",
+					"Chunk-and-check during explanations",
+					"End with recap and invite questions",
 				],
 			},
 		};

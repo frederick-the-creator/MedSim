@@ -1,59 +1,54 @@
 import { z } from "zod";
 
-// 1) Literal names for the five fixed dimensions
+// 1) Literal names for the five fixed dimensions (order enforced below)
 export type DimensionName =
 	| "Rapport, introduction, structure and flow"
 	| "Empathy, listening and patient perspective"
 	| "Medical explanation and plan"
 	| "Honesty and transparency"
-	| "Appropriate pace and non-verbal skills";
+	| "Appropriate pace";
 
-// 2) Single dimension shape
-export interface Dimension {
-	name: DimensionName;
-	raw_score_0_to_100: number;
-	weighted_score: number;
-	evidence: string[];
-	strengths: string[];
-	improvements: string[];
-	insufficient_evidence: boolean;
-	red_flags: string[];
+// 2) Qualitative point — each either a strength or improvement, with inline quotes
+export type PointType = "strength" | "improvement";
+
+export interface Point {
+	type: PointType;
+	text: string; // should include direct quotes from the transcript
 }
 
-// 3) Full assessment (note: no station_title; max_total fixed at 50)
+// 3) Single dimension (purely qualitative)
+export interface Dimension {
+	name: DimensionName;
+	points: Point[]; // 0–3 items, each is strength or improvement
+	insufficient_evidence: boolean;
+	red_flags: string[]; // e.g. unsafe advice, misinformation, etc.
+}
+
+// 4) Full assessment (no totals or scores)
 export interface Assessment {
-	max_total: 49.8;
 	dimensions: [
 		Dimension & { name: "Rapport, introduction, structure and flow" },
 		Dimension & { name: "Empathy, listening and patient perspective" },
 		Dimension & { name: "Medical explanation and plan" },
 		Dimension & { name: "Honesty and transparency" },
-		Dimension & { name: "Appropriate pace and non-verbal skills" },
+		Dimension & { name: "Appropriate pace" },
 	];
-	totals: {
-		total_score: number;
-		percentage: number;
-	};
-	overall_feedback: {
-		summary: string;
-		keep_doing: string[];
-		priorities_for_next_time: string[];
+	summary: {
+		free_text: string; // holistic reflection integrating key points
+		bullet_points: string[]; // up to 3 succinct learning focuses
 	};
 }
 
-// 4) JSON Schema Gemini will enforce at runtime
 export const AssessmentSchema = {
 	type: "object",
 	additionalProperties: false,
 	properties: {
-		max_total: { type: "number", enum: [49.8] },
-
 		dimensions: {
 			type: "array",
 			minItems: 5,
 			maxItems: 5,
-			// prefixItems enforces positionally the five required dimensions
 			prefixItems: [
+				// 1) Rapport
 				{
 					type: "object",
 					additionalProperties: false,
@@ -62,25 +57,26 @@ export const AssessmentSchema = {
 							type: "string",
 							enum: ["Rapport, introduction, structure and flow"],
 						},
-						raw_score_0_to_100: { type: "number", minimum: 0, maximum: 100 },
-						weighted_score: { type: "number", minimum: 0, maximum: 13.3 },
-						evidence: { type: "array", items: { type: "string" } },
-						strengths: { type: "array", items: { type: "string" } },
-						improvements: { type: "array", items: { type: "string" } },
+						points: {
+							type: "array",
+							minItems: 0,
+							maxItems: 3,
+							items: {
+								type: "object",
+								additionalProperties: false,
+								properties: {
+									type: { type: "string", enum: ["strength", "improvement"] },
+									text: { type: "string", pattern: '.*".+".*|.*“.+”.*' },
+								},
+								required: ["type", "text"],
+							},
+						},
 						insufficient_evidence: { type: "boolean" },
 						red_flags: { type: "array", items: { type: "string" } },
 					},
-					required: [
-						"name",
-						"raw_score_0_to_100",
-						"weighted_score",
-						"evidence",
-						"strengths",
-						"improvements",
-						"insufficient_evidence",
-						"red_flags",
-					],
+					required: ["name", "points", "insufficient_evidence", "red_flags"],
 				},
+				// 2) Empathy
 				{
 					type: "object",
 					additionalProperties: false,
@@ -89,135 +85,117 @@ export const AssessmentSchema = {
 							type: "string",
 							enum: ["Empathy, listening and patient perspective"],
 						},
-						raw_score_0_to_100: { type: "number", minimum: 0, maximum: 100 },
-						weighted_score: { type: "number", minimum: 0, maximum: 13.3 },
-						evidence: { type: "array", items: { type: "string" } },
-						strengths: { type: "array", items: { type: "string" } },
-						improvements: { type: "array", items: { type: "string" } },
+						points: {
+							type: "array",
+							minItems: 0,
+							maxItems: 3,
+							items: {
+								type: "object",
+								additionalProperties: false,
+								properties: {
+									type: { type: "string", enum: ["strength", "improvement"] },
+									text: { type: "string", pattern: '.*".+".*|.*“.+”.*' },
+								},
+								required: ["type", "text"],
+							},
+						},
 						insufficient_evidence: { type: "boolean" },
 						red_flags: { type: "array", items: { type: "string" } },
 					},
-					required: [
-						"name",
-						"raw_score_0_to_100",
-						"weighted_score",
-						"evidence",
-						"strengths",
-						"improvements",
-						"insufficient_evidence",
-						"red_flags",
-					],
+					required: ["name", "points", "insufficient_evidence", "red_flags"],
 				},
+				// 3) Medical explanation and plan
 				{
 					type: "object",
 					additionalProperties: false,
 					properties: {
 						name: { type: "string", enum: ["Medical explanation and plan"] },
-						raw_score_0_to_100: { type: "number", minimum: 0, maximum: 100 },
-						weighted_score: { type: "number", minimum: 0, maximum: 9.96 },
-						evidence: { type: "array", items: { type: "string" } },
-						strengths: { type: "array", items: { type: "string" } },
-						improvements: { type: "array", items: { type: "string" } },
+						points: {
+							type: "array",
+							minItems: 0,
+							maxItems: 3,
+							items: {
+								type: "object",
+								additionalProperties: false,
+								properties: {
+									type: { type: "string", enum: ["strength", "improvement"] },
+									text: { type: "string", pattern: '.*".+".*|.*“.+”.*' },
+								},
+								required: ["type", "text"],
+							},
+						},
 						insufficient_evidence: { type: "boolean" },
 						red_flags: { type: "array", items: { type: "string" } },
 					},
-					required: [
-						"name",
-						"raw_score_0_to_100",
-						"weighted_score",
-						"evidence",
-						"strengths",
-						"improvements",
-						"insufficient_evidence",
-						"red_flags",
-					],
+					required: ["name", "points", "insufficient_evidence", "red_flags"],
 				},
+				// 4) Honesty and transparency
 				{
 					type: "object",
 					additionalProperties: false,
 					properties: {
 						name: { type: "string", enum: ["Honesty and transparency"] },
-						raw_score_0_to_100: { type: "number", minimum: 0, maximum: 100 },
-						weighted_score: { type: "number", minimum: 0, maximum: 3.32 },
-						evidence: { type: "array", items: { type: "string" } },
-						strengths: { type: "array", items: { type: "string" } },
-						improvements: { type: "array", items: { type: "string" } },
+						points: {
+							type: "array",
+							minItems: 0,
+							maxItems: 3,
+							items: {
+								type: "object",
+								additionalProperties: false,
+								properties: {
+									type: { type: "string", enum: ["strength", "improvement"] },
+									text: { type: "string", pattern: '.*".+".*|.*“.+”.*' },
+								},
+								required: ["type", "text"],
+							},
+						},
 						insufficient_evidence: { type: "boolean" },
 						red_flags: { type: "array", items: { type: "string" } },
 					},
-					required: [
-						"name",
-						"raw_score_0_to_100",
-						"weighted_score",
-						"evidence",
-						"strengths",
-						"improvements",
-						"insufficient_evidence",
-						"red_flags",
-					],
+					required: ["name", "points", "insufficient_evidence", "red_flags"],
 				},
+				// 5) Appropriate pace
 				{
 					type: "object",
 					additionalProperties: false,
 					properties: {
-						name: {
-							type: "string",
-							enum: ["Appropriate pace and non-verbal skills"],
+						name: { type: "string", enum: ["Appropriate pace"] },
+						points: {
+							type: "array",
+							minItems: 0,
+							maxItems: 3,
+							items: {
+								type: "object",
+								additionalProperties: false,
+								properties: {
+									type: { type: "string", enum: ["strength", "improvement"] },
+									text: { type: "string", pattern: '.*".+".*|.*“.+”.*' },
+								},
+								required: ["type", "text"],
+							},
 						},
-						raw_score_0_to_100: { type: "number", minimum: 0, maximum: 100 },
-						weighted_score: { type: "number", minimum: 0, maximum: 9.96 },
-						evidence: { type: "array", items: { type: "string" } },
-						strengths: { type: "array", items: { type: "string" } },
-						improvements: { type: "array", items: { type: "string" } },
 						insufficient_evidence: { type: "boolean" },
 						red_flags: { type: "array", items: { type: "string" } },
 					},
-					required: [
-						"name",
-						"raw_score_0_to_100",
-						"weighted_score",
-						"evidence",
-						"strengths",
-						"improvements",
-						"insufficient_evidence",
-						"red_flags",
-					],
+					required: ["name", "points", "insufficient_evidence", "red_flags"],
 				},
 			],
 		},
 
-		totals: {
+		summary: {
 			type: "object",
 			additionalProperties: false,
 			properties: {
-				total_score: { type: "number" },
-				percentage: { type: "number" },
+				free_text: { type: "string" },
+				bullet_points: {
+					type: "array",
+					minItems: 0,
+					maxItems: 3,
+					items: { type: "string" },
+				},
 			},
-			required: ["total_score", "percentage"],
-		},
-
-		overall_feedback: {
-			type: "object",
-			additionalProperties: false,
-			properties: {
-				summary: { type: "string" },
-				keep_doing: { type: "array", items: { type: "string" } },
-				priorities_for_next_time: { type: "array", items: { type: "string" } },
-			},
-			required: ["summary", "keep_doing", "priorities_for_next_time"],
+			required: ["free_text", "bullet_points"],
 		},
 	},
-	required: ["max_total", "dimensions", "totals", "overall_feedback"],
+	required: ["dimensions", "summary"],
 } as const;
-
-// API schema for running an assessment
-export const runAssessmentSchemaAPI = z.object({
-	body: z.object({
-		roomUrl: z.string(),
-		roomId: z.string(),
-		roundId: z.string(),
-		caseName: z.string(),
-	}),
-});
-
-export type RunAssessmentBody = z.infer<typeof runAssessmentSchemaAPI>["body"];

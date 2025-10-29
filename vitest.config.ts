@@ -10,6 +10,8 @@ export default defineConfig({
 			"@shared": path.resolve(__dirname, "shared"),
 			"@prompts": path.resolve(__dirname, "shared", "prompts"),
 			"@assets": path.resolve(__dirname, "attached_assets"),
+			"@server": path.resolve(__dirname, "server"),
+			"@middleware": path.resolve(__dirname, "server", "middleware"),
 		},
 	},
 	test: {

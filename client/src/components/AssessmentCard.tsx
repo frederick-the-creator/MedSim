@@ -38,32 +38,17 @@ export default function AssessmentCard({ assessment }: Props) {
 					</div>
 				</div>
 
-				{/* Overall feedback */}
+				{/* Summary */}
 				<div className="border rounded p-3 space-y-2">
 					<div className="font-medium">Summary</div>
-					<p className="text-sm">{assessment.overall_feedback.summary}</p>
-					<div className="grid md:grid-cols-2 gap-4">
-						<div>
-							<div className="font-medium text-sm mb-1">Keep doing</div>
-							<ul className="list-disc pl-5 text-sm">
-								{(assessment.overall_feedback.keep_doing ?? []).map((x, i) => (
-									<li key={i}>{x}</li>
-								))}
-							</ul>
-						</div>
-						<div>
-							<div className="font-medium text-sm mb-1">
-								Priorities for next time
-							</div>
-							<ul className="list-disc pl-5 text-sm">
-								{(assessment.overall_feedback.priorities_for_next_time ?? []).map(
-									(x, i) => (
-										<li key={i}>{x}</li>
-									),
-								)}
-							</ul>
-						</div>
-					</div>
+					<p className="text-sm">{assessment.summary.free_text}</p>
+					{Array.isArray(assessment.summary.bullet_points) && (
+						<ul className="list-disc pl-5 text-sm">
+							{assessment.summary.bullet_points.map((x, i) => (
+								<li key={i}>{x}</li>
+							))}
+						</ul>
+					)}
 				</div>
 
 				{/* Dimensions */}
@@ -86,29 +71,25 @@ export default function AssessmentCard({ assessment }: Props) {
 								</div>
 							</AccordionTrigger>
 							<AccordionContent>
-								<div className="grid md:grid-cols-3 gap-4 pt-2">
-									<div>
-										<div className="font-medium text-sm mb-1">Evidence</div>
-										<ul className="list-disc pl-5 text-sm">
-											{(d.evidence ?? []).map((x, j) => (
-												<li key={j}>{x}</li>
-											))}
-										</ul>
-									</div>
+								<div className="grid md:grid-cols-2 gap-4 pt-2">
 									<div>
 										<div className="font-medium text-sm mb-1">Strengths</div>
 										<ul className="list-disc pl-5 text-sm">
-											{(d.strengths ?? []).map((x, j) => (
-												<li key={j}>{x}</li>
-											))}
+											{(d.points ?? [])
+												.filter((p) => p.type === "strength")
+												.map((p, j) => (
+													<li key={j}>{p.text}</li>
+												))}
 										</ul>
 									</div>
 									<div>
 										<div className="font-medium text-sm mb-1">Improvements</div>
 										<ul className="list-disc pl-5 text-sm">
-											{(d.improvements ?? []).map((x, j) => (
-												<li key={j}>{x}</li>
-											))}
+											{(d.points ?? [])
+												.filter((p) => p.type === "improvement")
+												.map((p, j) => (
+													<li key={j}>{p.text}</li>
+												))}
 										</ul>
 									</div>
 								</div>
