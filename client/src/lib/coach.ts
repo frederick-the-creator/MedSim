@@ -1,7 +1,7 @@
-export type ChatMessage = { role: string; content: string };
+import type { CoachRequestBody } from "@shared/schemas/coach";
 
-export async function postChatAndStream(
-	body: { messages: ChatMessage[]; transcript: string; assessment: string },
+export async function postCoachAndStream(
+	body: CoachRequestBody,
 	onUpdate: (partialText: string) => void,
 ): Promise<string> {
 	const resp = await fetch("/api/chat", {

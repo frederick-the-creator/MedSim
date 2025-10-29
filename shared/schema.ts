@@ -19,12 +19,12 @@ export const insertUserSchema = createInsertSchema(users).pick({
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
-export interface ChatMessage {
-	id: string;
-	role: "user" | "assistant";
-	content: string;
-	timestamp: Date;
-}
+// export interface ChatMessage {
+// 	id: string;
+// 	role: "user" | "assistant";
+// 	content: string;
+// 	timestamp: Date;
+// }
 
 export interface FeedbackSection {
 	category: string;

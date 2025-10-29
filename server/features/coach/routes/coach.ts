@@ -1,6 +1,6 @@
-import { z } from "zod";
 import { Request, Response, NextFunction } from "express";
 import { buildCoachSystemInstruction } from "../services/coach";
+import { parseCoachRequestBody } from "@server/shared/utils/validation";
 
 export async function coachRoute(
 	req: Request,
@@ -8,20 +8,7 @@ export async function coachRoute(
 	next: NextFunction,
 ): Promise<void> {
 	try {
-		const bodySchema = z.object({
-			messages: z
-				.array(
-					z.object({
-						role: z.enum(["user", "assistant"]),
-						content: z.string().max(8000),
-					}),
-				)
-				.max(100),
-			transcript: z.string().optional().default(""),
-			assessment: z.string().optional().default(""),
-		});
-
-		const body = bodySchema.parse(req.body);
+		const body = parseCoachRequestBody(req.body);
 
 		const apiKey = process.env.GEMINI_API_KEY;
 		if (!apiKey) throw new Error("GEMINI_API_KEY missing");

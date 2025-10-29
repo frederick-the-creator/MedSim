@@ -6,11 +6,12 @@ import VoiceAgentInterface from "@/components/VoiceAgentInterface";
 import TwoColumnRow from "@/components/layout/TwoColumnRow";
 import AssessmentDialog from "@/components/AssessmentDialog";
 import { fetchAssessment } from "@/lib/assessment";
-import { postChatAndStream } from "@/lib/chat";
-import ChatInterface from "@/components/ChatInterface";
+import { postCoachAndStream } from "@/lib/coach";
+import ChatInterface from "@/components/CoachInterface";
 import { medicalCases } from "@shared/cases";
 import type { Assessment } from "@shared/schemas/assessment";
 import AssessmentCard from "@/components/AssessmentCard";
+import type { CoachMessage, CoachRequestBody } from "@shared/schemas/coach";
  
 
 export default function CaseDetail() {
@@ -19,7 +20,7 @@ export default function CaseDetail() {
 	const [isAssessmentLoading, setIsAssessmentLoading] = useState(false);
 	const [assessment, setAssessment] = useState<Assessment | null>(null);
 	const [transcript, setTranscript] = useState<string | null>(null);
-	const [chatMessages, setChatMessages] = useState([] as any[]);
+	const [coachMessages, setCoachMessages] = useState<CoachMessage[]>([]);
 	const [isChatLoading, setIsChatLoading] = useState(false);
 	const secondRowRef = useRef<HTMLDivElement | null>(null);
 
@@ -106,17 +107,17 @@ export default function CaseDetail() {
 							}
 							right={
 									<ChatInterface
-										messages={chatMessages as any}
+										messages={coachMessages}
 										onSendMessage={async (text) => {
-											const userMsg = {
+											const userMsg: CoachMessage = {
 												id: `${Date.now()}`,
 												role: "user",
 												content: text,
 												timestamp: new Date(),
 											};
-											setChatMessages((prev: any[]) => [...prev, userMsg]);
+											setCoachMessages((prev: any[]) => [...prev, userMsg]);
 											const assistantId = `${Date.now()}-assist`;
-											setChatMessages((prev: any[]) => [
+											setCoachMessages((prev: any[]) => [
 												...prev,
 												{
 													id: assistantId,
@@ -127,15 +128,13 @@ export default function CaseDetail() {
 											]);
 											setIsChatLoading(true);
 											try {
-											const body = {
-												messages: [...chatMessages, userMsg].map(
-													(m: any) => ({ role: m.role, content: m.content }),
-												),
+											const body: CoachRequestBody = {
+												messages: [...coachMessages, userMsg],
 												transcript: transcript ?? "",
 												assessment: assessment ? JSON.stringify(assessment) : "",
 											};
-											await postChatAndStream(body, (acc) => {
-												setChatMessages((prev: any[]) =>
+											await postCoachAndStream(body, (acc: string) => {
+												setCoachMessages((prev: any[]) =>
 													prev.map((m: any) =>
 														m.id === assistantId ? { ...m, content: acc } : m,
 													),
@@ -143,7 +142,7 @@ export default function CaseDetail() {
 											});
 											} catch (e) {
 												const errText = (e as any)?.message || "Chat failed";
-												setChatMessages((prev: any[]) =>
+												setCoachMessages((prev: any[]) =>
 													prev.map((m: any) =>
 														m.id === assistantId
 															? { ...m, content: errText }

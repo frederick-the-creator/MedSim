@@ -1,9 +1,9 @@
 import { useState } from "react";
-import ChatInterface from "../ChatInterface";
-import { ChatMessage } from "@shared/schema";
+import ChatInterface from "../CoachInterface";
+import { CoachMessage } from "@shared/schemas/coach";
 
-export default function ChatInterfaceExample() {
-	const [messages, setMessages] = useState<ChatMessage[]>([
+export default function CoachInterfaceExample() {
+	const [messages, setMessages] = useState<CoachMessage[]>([
 		{
 			id: "1",
 			role: "user",
@@ -21,7 +21,7 @@ export default function ChatInterfaceExample() {
 	]);
 
 	const handleSend = (message: string) => {
-		const newMessage: ChatMessage = {
+		const newMessage: CoachMessage = {
 			id: Date.now().toString(),
 			role: "user",
 			content: message,
@@ -34,7 +34,6 @@ export default function ChatInterfaceExample() {
 	return (
 		<div className="h-[600px] border rounded-lg overflow-hidden">
 			<ChatInterface
-				patientName="Aoife O'Connor"
 				messages={messages}
 				onSendMessage={handleSend}
 			/>

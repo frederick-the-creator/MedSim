@@ -2,22 +2,22 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Send } from "lucide-react";
-import { ChatMessage } from "@shared/schema";
+import { CoachMessage } from "@shared/schemas/coach";
 import { Card } from "@/components/ui/card";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
-interface ChatInterfaceProps {
-	messages: ChatMessage[];
+interface CoachInterfaceProps {
+	messages: CoachMessage[];
 	onSendMessage: (message: string) => void;
 	isLoading?: boolean;
 }
 
-export default function ChatInterface({
+export default function CoachInterface({
 	messages,
 	onSendMessage,
 	isLoading = false,
-}: ChatInterfaceProps) {
+}: CoachInterfaceProps) {
 	const [input, setInput] = useState("");
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 
