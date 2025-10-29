@@ -11,6 +11,7 @@ export async function assessmentRoute(
 	res: Response,
 	next: NextFunction,
 ): Promise<void> {
+	res.locals.context = "assessment.generate";
 	const { conversationId, medicalCase } = parseAssessmentRequestBody(req.body);
 
 	const transcript = await fetchTranscriptFromElevenLabs(conversationId);

@@ -1,0 +1,7 @@
+# Error Handling Rules
+
+- Use Express 5 async propagation; avoid try/catch in routes/services unless strictly required.
+- Normalize all upstream API errors in server/middleware/errorMiddleware.ts.
+- When calling Google GenAI (Gemini), do not catch; let errors bubble, log provider/code/status/message in middleware.
+- Set res.locals.context in routes (e.g., "assessment.generate", "coach.stream") for structured logging.
+- Do not leak secrets in logs or responses; prefer 502 for upstream failures.
