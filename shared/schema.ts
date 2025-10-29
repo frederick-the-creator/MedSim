@@ -116,6 +116,7 @@ export interface ModelAnswer {
 		supportActions: string[];
 	};
 }
+
 // Medical case types
 export interface MedicalCase {
 	id: number;
