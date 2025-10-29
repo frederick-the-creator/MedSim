@@ -2,6 +2,7 @@ import { z } from "zod";
 import { medicalCaseSchema } from "@shared/schemas/case";
 import { coachRequestSchema } from "@shared/schemas/coach";
 import type { Assessment } from "@shared/schemas/assessment";
+import { DIMENSION_KEYS } from "@shared/schemas/assessment";
 
 export const assessmentRequestSchema = z.object({
 	conversationId: z.string().min(1),
@@ -65,8 +66,13 @@ export function isAssessment(value: unknown): value is Assessment {
 	if (!isNonNullObject(value)) return false;
 	const dims = (value as any).dimensions;
 	const summary = (value as any).summary;
-	if (!Array.isArray(dims) || dims.length !== 5) return false;
-	const dimsOk = dims.every(isDimension);
+	if (!isNonNullObject(dims)) return false;
+	const dimKeys = Object.keys(dims);
+	if (dimKeys.length !== DIMENSION_KEYS.length) return false;
+	for (const key of DIMENSION_KEYS) {
+		if (!Object.prototype.hasOwnProperty.call(dims, key)) return false;
+	}
+	const dimsOk = DIMENSION_KEYS.every((k) => isDimension((dims as any)[k]));
 	const summaryOk =
 		isNonNullObject(summary) &&
 		typeof (summary as any).free_text === "string" &&

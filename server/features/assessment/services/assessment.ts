@@ -1,5 +1,6 @@
 import { Assessment, AssessmentSchema } from "@shared/schemas/assessment";
 import { isAssessment } from "@server/shared/utils/validation";
+import { normalizeAssessment } from "@server/shared/utils/assessmentNormalize";
 
 interface ElevenTranscriptItem {
 	role: "user" | "agent" | string;
@@ -109,25 +110,54 @@ export async function assessWithGemini(input: {
 
 	const contents = [{ text: medicalCase }, { text: transcript }];
 
-	const response = await ai.models.generateContent({
-		config: {
-			systemInstruction,
-			responseMimeType: "application/json",
-			responseJsonSchema: AssessmentSchema,
-		},
-		contents,
-		model: "gemini-2.5-pro",
-	});
+	console.log("AssessmentSchema");
+	console.dir(AssessmentSchema, { depth: null });
 
-	// Safely extract JSON text from response without assertions
-	const safeText = response.text ?? "{}";
-	const parsedResponse: unknown = JSON.parse(safeText);
-	console.log("Parsed Response");
-	console.log(parsedResponse);
+	const maxAttempts = 3;
+	for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+		const extraReminder =
+			attempt === 1
+				? ""
+				: "\n\nReminder: Your previous output failed JSON Schema validation. Output MUST match the schema exactly. Do NOT add extra fields. Include all required fields even if empty/false.";
 
-	if (!isAssessment(parsedResponse)) {
-		throw new Error("Model returned invalid assessment JSON");
+		const effectiveSystemInstruction = `${systemInstruction}${extraReminder}`;
+
+		const response = await ai.models.generateContent({
+			config: {
+				systemInstruction: effectiveSystemInstruction,
+				responseMimeType: "application/json",
+				responseJsonSchema: AssessmentSchema,
+			},
+			contents,
+			model: "gemini-2.5-pro",
+		});
+
+		// Safely extract JSON text from response without assertions
+		const safeText = response.text ?? "{}";
+		let parsedResponse: unknown = {};
+		try {
+			parsedResponse = JSON.parse(safeText);
+		} catch (e) {
+			console.warn("Failed to parse model JSON (attempt", attempt, ")");
+		}
+		console.log("Parsed Response");
+		console.log(parsedResponse);
+
+		const normalized = normalizeAssessment(parsedResponse);
+		if (normalized && isAssessment(normalized)) {
+			return normalized;
+		}
+
+		const preview = safeText.slice(0, 500);
+		console.warn(
+			`Assessment JSON failed validation (attempt ${attempt}/${maxAttempts}). Preview:`,
+			preview,
+		);
+
+		if (attempt < maxAttempts) {
+			await new Promise((r) => setTimeout(r, 300 + attempt * 200));
+		}
 	}
 
-	return parsedResponse;
+	throw new Error("Model returned invalid assessment JSON after retries");
 }

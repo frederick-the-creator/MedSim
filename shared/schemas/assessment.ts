@@ -26,162 +26,122 @@ export interface Dimension {
 
 // 4) Full assessment (no totals or scores)
 export interface Assessment {
-	dimensions: [
-		Dimension & { name: "Rapport, introduction, structure and flow" },
-		Dimension & { name: "Empathy, listening and patient perspective" },
-		Dimension & { name: "Medical explanation and plan" },
-		Dimension & { name: "Honesty and transparency" },
-		Dimension & { name: "Appropriate pace" },
-	];
+	dimensions: {
+		rapport_introduction_structure_flow: Dimension & {
+			name: "Rapport, introduction, structure and flow";
+		};
+		empathy_listening_patient_perspective: Dimension & {
+			name: "Empathy, listening and patient perspective";
+		};
+		medical_explanation_and_plan: Dimension & {
+			name: "Medical explanation and plan";
+		};
+		honesty_and_transparency: Dimension & {
+			name: "Honesty and transparency";
+		};
+		appropriate_pace: Dimension & { name: "Appropriate pace" };
+	};
 	summary: {
 		free_text: string; // holistic reflection integrating key points
 		bullet_points: string[]; // up to 3 succinct learning focuses
 	};
 }
 
+export const DIMENSION_KEYS = [
+	"rapport_introduction_structure_flow",
+	"empathy_listening_patient_perspective",
+	"medical_explanation_and_plan",
+	"honesty_and_transparency",
+	"appropriate_pace",
+] as const;
+export type DimensionKey = (typeof DIMENSION_KEYS)[number];
+
 export const AssessmentSchema = {
+	$id: "AssessmentSchema",
 	type: "object",
 	additionalProperties: false,
+	$defs: {
+		Point: {
+			type: "object",
+			additionalProperties: false,
+			properties: {
+				type: { type: "string", enum: ["strength", "improvement"] },
+				text: { type: "string" }, // (avoid pattern; not reliably supported)
+			},
+			required: ["type", "text"],
+		},
+		Dimension: {
+			type: "object",
+			additionalProperties: false,
+			properties: {
+				// keep name if you want it echoed back; otherwise drop it to simplify further
+				name: { type: "string" },
+				points: {
+					type: "array",
+					minItems: 0,
+					maxItems: 3,
+					items: { $ref: "#/$defs/Point" },
+				},
+				insufficient_evidence: { type: "boolean" },
+				red_flags: { type: "array", items: { type: "string" } },
+			},
+			required: ["name", "points", "insufficient_evidence", "red_flags"],
+		},
+	},
 	properties: {
 		dimensions: {
-			type: "array",
-			minItems: 5,
-			maxItems: 5,
-			prefixItems: [
-				// 1) Rapport
-				{
-					type: "object",
-					additionalProperties: false,
-					properties: {
-						name: {
-							type: "string",
-							enum: ["Rapport, introduction, structure and flow"],
-						},
-						points: {
-							type: "array",
-							minItems: 0,
-							maxItems: 3,
-							items: {
-								type: "object",
-								additionalProperties: false,
-								properties: {
-									type: { type: "string", enum: ["strength", "improvement"] },
-									text: { type: "string", pattern: '.*".+".*|.*“.+”.*' },
-								},
-								required: ["type", "text"],
+			type: "object",
+			additionalProperties: false,
+			properties: {
+				rapport_introduction_structure_flow: {
+					allOf: [
+						{ $ref: "#/$defs/Dimension" },
+						{
+							properties: {
+								name: { enum: ["Rapport, introduction, structure and flow"] },
 							},
 						},
-						insufficient_evidence: { type: "boolean" },
-						red_flags: { type: "array", items: { type: "string" } },
-					},
-					required: ["name", "points", "insufficient_evidence", "red_flags"],
+					],
 				},
-				// 2) Empathy
-				{
-					type: "object",
-					additionalProperties: false,
-					properties: {
-						name: {
-							type: "string",
-							enum: ["Empathy, listening and patient perspective"],
-						},
-						points: {
-							type: "array",
-							minItems: 0,
-							maxItems: 3,
-							items: {
-								type: "object",
-								additionalProperties: false,
-								properties: {
-									type: { type: "string", enum: ["strength", "improvement"] },
-									text: { type: "string", pattern: '.*".+".*|.*“.+”.*' },
-								},
-								required: ["type", "text"],
+				empathy_listening_patient_perspective: {
+					allOf: [
+						{ $ref: "#/$defs/Dimension" },
+						{
+							properties: {
+								name: { enum: ["Empathy, listening and patient perspective"] },
 							},
 						},
-						insufficient_evidence: { type: "boolean" },
-						red_flags: { type: "array", items: { type: "string" } },
-					},
-					required: ["name", "points", "insufficient_evidence", "red_flags"],
+					],
 				},
-				// 3) Medical explanation and plan
-				{
-					type: "object",
-					additionalProperties: false,
-					properties: {
-						name: { type: "string", enum: ["Medical explanation and plan"] },
-						points: {
-							type: "array",
-							minItems: 0,
-							maxItems: 3,
-							items: {
-								type: "object",
-								additionalProperties: false,
-								properties: {
-									type: { type: "string", enum: ["strength", "improvement"] },
-									text: { type: "string", pattern: '.*".+".*|.*“.+”.*' },
-								},
-								required: ["type", "text"],
-							},
+				medical_explanation_and_plan: {
+					allOf: [
+						{ $ref: "#/$defs/Dimension" },
+						{
+							properties: { name: { enum: ["Medical explanation and plan"] } },
 						},
-						insufficient_evidence: { type: "boolean" },
-						red_flags: { type: "array", items: { type: "string" } },
-					},
-					required: ["name", "points", "insufficient_evidence", "red_flags"],
+					],
 				},
-				// 4) Honesty and transparency
-				{
-					type: "object",
-					additionalProperties: false,
-					properties: {
-						name: { type: "string", enum: ["Honesty and transparency"] },
-						points: {
-							type: "array",
-							minItems: 0,
-							maxItems: 3,
-							items: {
-								type: "object",
-								additionalProperties: false,
-								properties: {
-									type: { type: "string", enum: ["strength", "improvement"] },
-									text: { type: "string", pattern: '.*".+".*|.*“.+”.*' },
-								},
-								required: ["type", "text"],
-							},
-						},
-						insufficient_evidence: { type: "boolean" },
-						red_flags: { type: "array", items: { type: "string" } },
-					},
-					required: ["name", "points", "insufficient_evidence", "red_flags"],
+				honesty_and_transparency: {
+					allOf: [
+						{ $ref: "#/$defs/Dimension" },
+						{ properties: { name: { enum: ["Honesty and transparency"] } } },
+					],
 				},
-				// 5) Appropriate pace
-				{
-					type: "object",
-					additionalProperties: false,
-					properties: {
-						name: { type: "string", enum: ["Appropriate pace"] },
-						points: {
-							type: "array",
-							minItems: 0,
-							maxItems: 3,
-							items: {
-								type: "object",
-								additionalProperties: false,
-								properties: {
-									type: { type: "string", enum: ["strength", "improvement"] },
-									text: { type: "string", pattern: '.*".+".*|.*“.+”.*' },
-								},
-								required: ["type", "text"],
-							},
-						},
-						insufficient_evidence: { type: "boolean" },
-						red_flags: { type: "array", items: { type: "string" } },
-					},
-					required: ["name", "points", "insufficient_evidence", "red_flags"],
+				appropriate_pace: {
+					allOf: [
+						{ $ref: "#/$defs/Dimension" },
+						{ properties: { name: { enum: ["Appropriate pace"] } } },
+					],
 				},
+			},
+			required: [
+				"rapport_introduction_structure_flow",
+				"empathy_listening_patient_perspective",
+				"medical_explanation_and_plan",
+				"honesty_and_transparency",
+				"appropriate_pace",
 			],
 		},
-
 		summary: {
 			type: "object",
 			additionalProperties: false,

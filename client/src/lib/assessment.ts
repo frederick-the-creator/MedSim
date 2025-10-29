@@ -17,51 +17,51 @@ export async function fetchAssessment(
 		// Simulate 5s backend processing delay in mock mode
 		await delay(5000);
 		const mockAssessment: Assessment = {
-			dimensions: [
-				{
+			dimensions: {
+				rapport_introduction_structure_flow: {
 					name: "Rapport, introduction, structure and flow",
 					points: [
 						{
 							type: "strength",
-							text: '"Hello, I\'m..." established a clear introduction and role.',
+							text: `"Hello, I'm..." established a clear introduction and role.`,
 						},
 						{
 							type: "strength",
-							text: 'You signposted: "Next, I\'ll explain..." which aided structure.',
+							text: `You signposted: "Next, I'll explain..." which aided structure.`,
 						},
 						{
 							type: "improvement",
-							text: 'Consider a brief closing summary: "To recap, we\'ll..."',
+							text: `Consider a brief closing summary: "To recap, we'll..."`,
 						},
 					],
 					insufficient_evidence: false,
 					red_flags: [],
 				},
-				{
+				empathy_listening_patient_perspective: {
 					name: "Empathy, listening and patient perspective",
 					points: [
 						{
 							type: "strength",
-							text: 'Validated emotion: "I can see this is worrying for you."',
+							text: `Validated emotion: "I can see this is worrying for you."`,
 						},
 						{
 							type: "improvement",
-							text: 'When patient said "I\'m scared about my sight", explicitly reflect and explore this fear.',
+							text: `When patient said "I'm scared about my sight", explicitly reflect and explore this fear.`,
 						},
 					],
 					insufficient_evidence: false,
 					red_flags: [],
 				},
-				{
+				medical_explanation_and_plan: {
 					name: "Medical explanation and plan",
 					points: [
 						{
 							type: "strength",
-							text: 'Gave clear plan: "We\'ll start hourly antibiotic drops."',
+							text: `Gave clear plan: "We'll start hourly antibiotic drops."`,
 						},
 						{
 							type: "strength",
-							text: 'Included safety-netting: "If symptoms worsen, please return to A&E."',
+							text: `Included safety-netting: "If symptoms worsen, please return to A&E."`,
 						},
 						{
 							type: "improvement",
@@ -71,18 +71,18 @@ export async function fetchAssessment(
 					insufficient_evidence: false,
 					red_flags: [],
 				},
-				{
+				honesty_and_transparency: {
 					name: "Honesty and transparency",
 					points: [
 						{
 							type: "strength",
-							text: 'Acknowledged limits: "I\'ll discuss with my consultant."',
+							text: `Acknowledged limits: "I'll discuss with my consultant."`,
 						},
 					],
 					insufficient_evidence: false,
 					red_flags: [],
 				},
-				{
+				appropriate_pace: {
 					name: "Appropriate pace",
 					points: [
 						{
@@ -91,13 +91,13 @@ export async function fetchAssessment(
 						},
 						{
 							type: "improvement",
-							text: 'At start, avoid cutting in; the patient said "..." before being interrupted.',
+							text: `At start, avoid cutting in; the patient said "..." before being interrupted.`,
 						},
 					],
 					insufficient_evidence: false,
 					red_flags: [],
 				},
-			],
+			},
 			summary: {
 				free_text:
 					"Clear structure and safe plan with good safety-netting. Empathy present but could more directly validate core fears about sight. Maintain steady pacing and finish with a concise summary and check understanding.",

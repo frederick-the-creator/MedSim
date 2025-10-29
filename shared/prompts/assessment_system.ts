@@ -120,6 +120,39 @@ Summary
 			- Include explicit safety-netting and red-flag advice
 			- Maintain steady pacing during explanations
 
+---
+
+# Strict JSON Output Rules
+
+The output MUST conform exactly to the provided JSON Schema. Follow these rules strictly:
+
+1) Shapes and Keys
+	- Do not include any properties that are not defined in the schema (e.g., do not add a "score" field).
+	- 'dimensions' MUST be an object with these exact keys:
+		- 'rapport_introduction_structure_flow'
+		- 'empathy_listening_patient_perspective'
+		- 'medical_explanation_and_plan'
+		- 'honesty_and_transparency'
+		- 'appropriate_pace'
+
+2) Per-Dimension Fields (include all, even if empty/false)
+	- 'name': Use the exact canonical value provided for that key.
+	- 'points': Array with 0–3 items. Each item has:
+		- 'type': either "strength" or "improvement" only
+		- 'text': string that includes direct quotes from the transcript as evidence
+	- 'insufficient_evidence': boolean (use true if the transcript does not provide enough content to assess that dimension; otherwise false)
+	- 'red_flags': array of strings (use [] if none)
+
+3) Summary
+	- 'summary.free_text': string
+	- 'summary.bullet_points': array of up to 3 strings
+
+4) No Extras
+	- Do NOT include any additional properties beyond those specified above.
+
+5) If Evidence Is Limited
+	- Set 'insufficient_evidence' to true and still return the full object with empty 'points' and 'red_flags'.
+
 `;
 
 export default assessmentSystem;

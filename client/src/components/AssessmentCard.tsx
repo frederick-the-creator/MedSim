@@ -1,4 +1,5 @@
 import type { Assessment } from "@shared/schemas/assessment";
+import { DIMENSION_KEYS } from "@shared/schemas/assessment";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
 	Accordion,
@@ -14,11 +15,9 @@ type Props = {
 
 export default function AssessmentCard({ assessment }: Props) {
 	if (!assessment) return null;
-	const dims = Array.isArray(assessment.dimensions) ? assessment.dimensions : [];
+	const dims = DIMENSION_KEYS.map((k) => assessment.dimensions[k]);
 	const hasInsufficient = dims.some((d) => d.insufficient_evidence);
-	const hasRedFlags = dims.some(
-		(d) => Array.isArray(d.red_flags) && d.red_flags.length > 0,
-	);
+	const hasRedFlags = dims.some((d) => Array.isArray(d.red_flags) && d.red_flags.length > 0);
 
 	return (
 		<ScrollArea className="h-[70vh] px-6 pb-6">
