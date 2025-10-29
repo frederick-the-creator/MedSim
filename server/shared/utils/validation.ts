@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { medicalCaseSchema } from "@shared/schema";
+import { medicalCaseSchema } from "@shared/schemas/case";
 
 export const assessmentRequestSchema = z.object({
 	conversationId: z.string().min(1),

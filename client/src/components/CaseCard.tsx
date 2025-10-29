@@ -7,7 +7,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight } from "lucide-react";
-import { MedicalCase } from "@shared/schema";
+import { MedicalCase } from "@shared/schemas/case";
 
 interface CaseCardProps {
 	medicalCase: MedicalCase;

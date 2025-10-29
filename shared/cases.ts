@@ -1,4 +1,4 @@
-import { MedicalCase } from "./schema";
+import { MedicalCase } from "./schemas/case";
 
 export const medicalCases: MedicalCase[] = [
 	// {

@@ -1,5 +1,5 @@
 import { MOCK_VOICE_AGENT } from "@/lib/config";
-import { MedicalCase } from "@shared/schema";
+import { MedicalCase } from "@shared/schemas/case";
 import type { Assessment } from "@shared/schemas/assessment";
 
 type AssessmentResult = {

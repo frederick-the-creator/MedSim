@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FileText, Stethoscope, Lightbulb } from "lucide-react";
-import { MedicalCase } from "@shared/schema";
+import { MedicalCase } from "@shared/schemas/case";
 
 interface CaseBriefProps {
 	medicalCase: MedicalCase;
