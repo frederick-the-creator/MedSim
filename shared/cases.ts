@@ -130,7 +130,7 @@ export const medicalCases: MedicalCase[] = [
 	// },
 	{
 		id: 4,
-		agentId: "",
+		agentId: "agent_7101k8gjjb4be9samwm3bew42ccr",
 		vignette: {
 			background: {
 				patientName: "Brian Evans",
