@@ -7,14 +7,14 @@ import TwoColumnRow from "@/components/layout/TwoColumnRow";
 import AssessmentDialog from "@/components/AssessmentDialog";
 import { fetchAssessment } from "@/lib/assessment";
 import { postCoachAndStream } from "@/lib/coach";
-import ChatInterface from "@/components/CoachInterface";
+import CoachInterface from "@/components/CoachInterface";
 import { medicalCases } from "@shared/cases";
 import type { Assessment } from "@shared/schemas/assessment";
 import AssessmentCard from "@/components/AssessmentCard";
 import type { CoachMessage, CoachRequestBody } from "@shared/schemas/coach";
  
 
-export default function CaseDetail() {
+export default function CasePractice() {
 	const [, params] = useRoute("/case/:id");
 	const [, setLocation] = useLocation();
 	const [isAssessmentLoading, setIsAssessmentLoading] = useState(false);
@@ -106,7 +106,7 @@ export default function CaseDetail() {
 									<AssessmentCard assessment={assessment} />
 							}
 							right={
-									<ChatInterface
+									<CoachInterface
 										messages={coachMessages}
 										onSendMessage={async (text) => {
 											const userMsg: CoachMessage = {
