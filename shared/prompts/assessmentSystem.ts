@@ -15,7 +15,7 @@ A structured JSON report based on the official mark scheme, **using direct quote
 
 **Input You Will Receive:**
 1.  Transcript: The full text of the conversation between the candidate (Doctor) and the simulated patient (Patient).
-2.  Case: This includes the Vignette, History and Model Answer.
+2.  Case: This includes the Vignette, History and Model Answer. The User only had access to the Vignette during the practice interview, and it was their job to uncover details about the history and align with the model answer.
 
 ---
 

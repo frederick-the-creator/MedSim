@@ -1,4 +1,4 @@
-import assessmentSystem from "@prompts/assessment_system";
+import assessmentSystem from "@shared/prompts/assessmentSystem";
 import { parseAssessmentRequestBody } from "@server/shared/utils/validation";
 import {
 	fetchTranscriptFromElevenLabs,

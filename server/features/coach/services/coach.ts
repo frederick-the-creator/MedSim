@@ -1,4 +1,4 @@
-import coachPersona from "@prompts/coach_persona";
+import coachSystem from "@shared/prompts/coachSystem";
 import type { MedicalCase } from "@shared/schemas/case";
 
 export async function buildCoachSystemInstruction(
@@ -7,7 +7,7 @@ export async function buildCoachSystemInstruction(
 	medicalCase: MedicalCase,
 ): Promise<string> {
 	return [
-		coachPersona.trim(),
+		coachSystem.trim(),
 		"=== CASE CONTEXT ===",
 		JSON.stringify(medicalCase, null, 2),
 		"=== ASSESSMENT ===",
