@@ -1,13 +1,8 @@
-import { useState, useEffect, useRef } from "react";
-import { useConversation } from "@elevenlabs/react";
 import { Button } from "@/components/ui/button";
-import { Orb, AgentState } from "@/components/ui/orb";
+import { Orb } from "@/components/ui/orb";
 import { Phone, PhoneOff } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { MOCK_VOICE_AGENT } from "@/lib/config";
-
-// Mock flag centralized in lib/config
-console.log("Mock voice agent", MOCK_VOICE_AGENT);
+import { useVoiceAgentAuto } from "@/hooks/useVoiceAgent";
 
 interface VoiceAgentInterfaceProps {
 	patientName: string;
@@ -20,160 +15,22 @@ export default function VoiceAgentInterface({
 	agentId,
 	onEndConversation,
 }: VoiceAgentInterfaceProps) {
-	const [conversationId, setConversationId] = useState<string | null>(null);
-	const conversationIdRef = useRef<string | null>(null);
-	const [isConnectedMock, setIsConnectedMock] = useState(false);
-	const [isSpeakingMock, setIsSpeakingMock] = useState(false);
-	const speakingIntervalRef = useRef<number | null>(null);
-
-	const conversation = useConversation({
-		onConnect: () => {
-			console.log("Voice agent connected");
-		},
-		onDisconnect: () => {
-			console.log("Voice agent disconnected");
-		},
-		onMessage: (message) => {
-			console.log("Message received:", message);
-		},
-		onError: (error) => {
-			console.error("Voice agent error:", error);
-		},
-	});
+	const agent = useVoiceAgentAuto();
 
 	const handleStartConversation = async () => {
-		if (MOCK_VOICE_AGENT) {
-			// Mock connect
-			const id = `mock-${Math.random().toString(36).slice(2, 10)}`;
-			setConversationId(id);
-			conversationIdRef.current = id;
-			setIsConnectedMock(true);
-			// Toggle speaking/listening periodically
-			if (speakingIntervalRef.current)
-				window.clearInterval(speakingIntervalRef.current);
-			speakingIntervalRef.current = window.setInterval(() => {
-				setIsSpeakingMock((prev) => !prev);
-			}, 1400);
-			console.log("[MOCK] Conversation started with ID:", id);
-			return;
-		}
-
-		try {
-			const id = await conversation.startSession({
-				agentId: agentId,
-				connectionType: "websocket",
-				userId: "fixed-user-12345",
-				clientTools: {},
-			});
-			setConversationId(id);
-			conversationIdRef.current = id;
-			// Clear any parent-managed state externally
-			console.log(
-				"Conversation started with ID:",
-				id,
-				"User ID: fixed-user-12345",
-			);
-		} catch (error) {
-			console.error("Failed to start conversation:", error);
-		}
+		await agent.startConversation({ agentId, userId: "fixed-user-12345" });
 	};
 
-	// Button for user to end conversation
 	const handleEndConversation = async () => {
-		const id = conversationIdRef.current;
-
-		if (MOCK_VOICE_AGENT) {
-			// Mock disconnect
-			if (speakingIntervalRef.current) {
-				window.clearInterval(speakingIntervalRef.current);
-				speakingIntervalRef.current = null;
-			}
-			setIsConnectedMock(false);
-			setIsSpeakingMock(false);
-			setConversationId(null);
-			conversationIdRef.current = null;
-			console.log("[MOCK] Conversation ended. ID was:", id);
-			onEndConversation?.(id ?? null);
-			return;
-		}
-
-		try {
-			await conversation.endSession();
-			console.log("Conversation ended. ID was:", id);
-		} catch (e) {
-			console.error("Error ending session:", e);
-		}
-
-		setConversationId(null);
-		conversationIdRef.current = null;
+		const id = agent.conversationId;
+		await agent.endConversation();
 		onEndConversation?.(id ?? null);
 	};
 
-	// Use effect to disconnect agent when component dismounts
-	useEffect(() => {
-		return () => {
-			if (MOCK_VOICE_AGENT) {
-				if (speakingIntervalRef.current)
-					window.clearInterval(speakingIntervalRef.current);
-				setIsConnectedMock(false);
-				setIsSpeakingMock(false);
-			} else if (conversation.status === "connected") {
-				conversation.endSession();
-			}
-		};
-	}, []);
-
-	// For Orb
-	const getAgentState = (): AgentState => {
-		if (MOCK_VOICE_AGENT) {
-			if (!isConnectedMock) return null;
-			return isSpeakingMock ? "talking" : "listening";
-		}
-		if (conversation.status !== "connected") return null;
-		if (conversation.isSpeaking) return "talking";
-		return "listening";
-	};
-
-	const isConnected = () =>
-		MOCK_VOICE_AGENT ? isConnectedMock : conversation.status === "connected";
-	const isConnecting = () =>
-		MOCK_VOICE_AGENT ? false : conversation.status === "connecting";
-
-	// For UI
 	const getAgentStateText = () => {
-		if (MOCK_VOICE_AGENT) {
-			if (isConnectedMock)
-				return isSpeakingMock ? "Agent is speaking" : "Listening...";
-			return "Ready to start";
-		}
-		if (conversation.status === "connecting") return "Connecting...";
-		if (conversation.status === "connected") {
-			if (conversation.isSpeaking) return "Agent is speaking";
-			return "Listening...";
-		}
+		if (agent.isConnecting) return "Connecting...";
+		if (agent.isConnected) return agent.agentState === "talking" ? "Agent is speaking" : "Listening...";
 		return "Ready to start";
-	};
-
-	// For Orb
-	const getInputVolume = () => {
-		if (MOCK_VOICE_AGENT) {
-			const t = Date.now() / 500;
-			const base = Math.abs(Math.sin(t));
-			return Math.min(1, (isSpeakingMock ? 0.6 : 0.2) + base * 0.3);
-		}
-		const raw = conversation.getInputVolume?.() ?? 0;
-		return Math.min(1.0, Math.pow(raw, 0.5) * 2.5);
-	};
-
-	// For Orb
-	const getOutputVolume = () => {
-		if (MOCK_VOICE_AGENT) {
-			const t = Date.now() / 500;
-			const base = Math.abs(Math.cos(t));
-			return Math.min(1, (isSpeakingMock ? 0.7 : 0.1) + base * 0.3);
-		}
-		const raw = conversation.getOutputVolume?.() ?? 0;
-		return Math.min(1.0, Math.pow(raw, 0.5) * 2.5);
 	};
 
 	return (
@@ -201,10 +58,10 @@ export default function VoiceAgentInterface({
 								<Orb
 									key="voice-orb"
 									colors={["#7C3AED", "#A78BFA"]}
-									agentState={getAgentState()}
+									agentState={agent.agentState}
 									volumeMode="manual"
-									getInputVolume={getInputVolume}
-									getOutputVolume={getOutputVolume}
+									getInputVolume={agent.getInputVolume}
+									getOutputVolume={agent.getOutputVolume}
 								/>
 							</div>
 						</div>
@@ -215,19 +72,19 @@ export default function VoiceAgentInterface({
 							{getAgentStateText()}
 						</p>
 						<p className="text-sm text-muted-foreground mt-2">
-							{isConnected()
+							{agent.isConnected
 								? "Speak naturally to communicate with the patient"
 								: "Press the phone button to start"}
 						</p>
 					</div>
 
 					<div className="flex gap-4">
-						{!isConnected() ? (
+						{!agent.isConnected ? (
 							<Button
 								onClick={handleStartConversation}
 								size="lg"
 								className="rounded-full w-16 h-16"
-								disabled={isConnecting()}
+								disabled={agent.isConnecting}
 								data-testid="button-start-call"
 							>
 								<Phone className="w-6 h-6" />
@@ -245,20 +102,17 @@ export default function VoiceAgentInterface({
 						)}
 					</div>
 
-					{conversationId && (
+					{agent.conversationId && (
 						<p
 							className="text-xs text-muted-foreground"
 							data-testid="text-conversation-id"
 						>
-							Conversation ID: {conversationId.substring(0, 8)}...
+							Conversation ID: {agent.conversationId.substring(0, 8)}...
 						</p>
 					)}
 
-					{/* Assessment UI handled by parent */}
 				</div>
 			</Card>
-
-			{/* Tip card removed; guidance handled elsewhere if needed */}
 		</div>
 	);
 }
