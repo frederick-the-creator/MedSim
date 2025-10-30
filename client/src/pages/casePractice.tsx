@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRoute, useLocation } from "wouter";
 import Header from "@/components/Header";
 import CaseBrief from "@/components/CaseBrief";
@@ -67,6 +67,64 @@ export default function CasePractice() {
 		setLocation("/");
 	};
 
+	const handleEndConversation = useCallback((conversationId: string | null | undefined) => {
+		if (!conversationId) return;
+		(async () => {
+			try {
+				setIsAssessmentLoading(true);
+				const result = await fetchAssessment(conversationId, medicalCase);
+				setAssessment(result.assessment);
+				setTranscript(result.transcript);
+			} catch (e: any) {
+				setAssessment(e?.message ?? "Assessment failed");
+			} finally {
+				setIsAssessmentLoading(false);
+			}
+		})();
+	}, [medicalCase]);
+
+	const handleSendMessage = useCallback((text: string) => {
+		const userMsg: CoachMessage = {
+			id: `${Date.now()}`,
+			role: "user",
+			content: text,
+			timestamp: new Date(),
+		};
+		setCoachMessages((prev: any[]) => [...prev, userMsg]);
+		const assistantId = `${Date.now()}-assist`;
+		setCoachMessages((prev: any[]) => [
+			...prev,
+			{
+				id: assistantId,
+				role: "assistant",
+				content: "",
+				timestamp: new Date(),
+			},
+		]);
+		setIsChatLoading(true);
+		(async () => {
+			try {
+				const body: CoachRequestBody = {
+					messages: [...coachMessages, userMsg],
+					transcript: transcript ?? "",
+					assessment: assessment ? JSON.stringify(assessment) : "",
+				};
+				await postCoachAndStream(body, (acc: string) => {
+					setCoachMessages((prev: any[]) =>
+						prev.map((m: any) => (m.id === assistantId ? { ...m, content: acc } : m)),
+					);
+				});
+			} catch (e) {
+				const errText = (e as any)?.message || "Chat failed";
+				setCoachMessages((prev: any[]) =>
+					prev.map((m: any) => (m.id === assistantId ? { ...m, content: errText } : m)),
+				);
+			} finally {
+				setIsChatLoading(false);
+			}
+		})();
+	}, [coachMessages, transcript, assessment]);
+
 	return (
 		<div className="min-h-screen flex flex-col bg-background">
 			<Header showBackButton onBack={handleBack} />
@@ -80,19 +138,7 @@ export default function CasePractice() {
 						<VoiceAgentInterface
 							patientName={medicalCase.vignette.background.patientName}
 							agentId={medicalCase.agentId}
-							onEndConversation={async (conversationId) => {
-										if (!conversationId) return;
-										try {
-											setIsAssessmentLoading(true);
-											const result = await fetchAssessment(conversationId, medicalCase);
-											setAssessment(result.assessment);
-											setTranscript(result.transcript);
-										} catch (e: any) {
-											setAssessment(e?.message ?? "Assessment failed");
-										} finally {
-											setIsAssessmentLoading(false);
-										}
-							}}
+						onEndConversation={handleEndConversation}
 						/>
 					}
 				/>
@@ -106,55 +152,11 @@ export default function CasePractice() {
 									<AssessmentCard assessment={assessment} />
 							}
 							right={
-									<CoachInterface
-										messages={coachMessages}
-										onSendMessage={async (text) => {
-											const userMsg: CoachMessage = {
-												id: `${Date.now()}`,
-												role: "user",
-												content: text,
-												timestamp: new Date(),
-											};
-											setCoachMessages((prev: any[]) => [...prev, userMsg]);
-											const assistantId = `${Date.now()}-assist`;
-											setCoachMessages((prev: any[]) => [
-												...prev,
-												{
-													id: assistantId,
-													role: "assistant",
-													content: "",
-													timestamp: new Date(),
-												},
-											]);
-											setIsChatLoading(true);
-											try {
-											const body: CoachRequestBody = {
-												messages: [...coachMessages, userMsg],
-												transcript: transcript ?? "",
-												assessment: assessment ? JSON.stringify(assessment) : "",
-											};
-											await postCoachAndStream(body, (acc: string) => {
-												setCoachMessages((prev: any[]) =>
-													prev.map((m: any) =>
-														m.id === assistantId ? { ...m, content: acc } : m,
-													),
-												);
-											});
-											} catch (e) {
-												const errText = (e as any)?.message || "Chat failed";
-												setCoachMessages((prev: any[]) =>
-													prev.map((m: any) =>
-														m.id === assistantId
-															? { ...m, content: errText }
-															: m,
-													),
-												);
-											} finally {
-												setIsChatLoading(false);
-											}
-										}}
-										isLoading={isChatLoading}
-									/>
+								<CoachInterface
+									messages={coachMessages}
+									onSendMessage={handleSendMessage}
+									isLoading={isChatLoading}
+								/>
 							}
 						/>
 					</div>
