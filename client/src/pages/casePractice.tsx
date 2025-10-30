@@ -5,13 +5,13 @@ import CaseBrief from "@/components/CaseBrief";
 import VoiceAgentInterface from "@/components/VoiceAgentInterface";
 import TwoColumnRow from "@/components/layout/TwoColumnRow";
 import MessageDialog from "@/components/MessageDialog";
-import { fetchAssessment } from "@/lib/assessment";
 import { postCoachAndStream } from "@/lib/coach";
 import CoachInterface from "@/components/CoachInterface";
 import { medicalCases } from "@shared/cases";
 import type { Assessment } from "@shared/schemas/assessment";
 import AssessmentCard from "@/components/AssessmentCard";
 import type { CoachMessage, CoachRequestBody } from "@shared/schemas/coach";
+import { useAssessmentAuto } from "@/hooks/useAssessment";
  
 
 export default function CasePractice() {
@@ -28,6 +28,9 @@ export default function CasePractice() {
 
 	const caseId = params?.id ? parseInt(params.id) : null;
 	const medicalCase = medicalCases.find((c) => c.id === caseId);
+
+	// Auto-select real vs mock assessment hook
+	const assessmentHook = useAssessmentAuto();
 
 	useEffect(() => {
 		// Reset state when case changes
@@ -74,9 +77,12 @@ export default function CasePractice() {
 		(async () => {
 			try {
 				setIsAssessmentLoading(true);
-				const result = await fetchAssessment(conversationId, medicalCase);
-				setAssessment(result.assessment);
-				setTranscript(result.transcript);
+				await assessmentHook.run(conversationId, medicalCase);
+				if (assessmentHook.error) {
+					throw new Error(assessmentHook.error);
+				}
+				setAssessment(assessmentHook.assessment);
+				setTranscript(assessmentHook.transcript);
 			} catch (e: any) {
 				setAssessment(null);
 				setTranscript(null);
@@ -86,7 +92,7 @@ export default function CasePractice() {
 				setIsAssessmentLoading(false);
 			}
 		})();
-	}, [medicalCase]);
+	}, [medicalCase, assessmentHook]);
 
 	const handleSendMessage = useCallback((text: string) => {
 		const userMsg: CoachMessage = {
@@ -132,7 +138,7 @@ export default function CasePractice() {
 				setIsChatLoading(false);
 			}
 		})();
-	}, [coachMessages, transcript, assessment]);
+	}, [coachMessages, transcript, assessment, medicalCase]);
 
 	return (
 		<div className="min-h-screen flex flex-col bg-background">
@@ -147,18 +153,18 @@ export default function CasePractice() {
 						<VoiceAgentInterface
 							patientName={medicalCase.vignette.background.patientName}
 							agentId={medicalCase.agentId}
-						onEndConversation={handleEndConversation}
+							onEndConversation={handleEndConversation}
 						/>
 					}
 				/>
 
 				{assessment && transcript && (
 					<div ref={secondRowRef} className="mt-8">
-							<TwoColumnRow
-								split="1-1"
-								className="h-[70vh]"
+						<TwoColumnRow
+							split="1-1"
+							className="h-[70vh]"
 							left={
-									<AssessmentCard assessment={assessment} />
+								<AssessmentCard assessment={assessment} />
 							}
 							right={
 								<CoachInterface
@@ -170,7 +176,6 @@ export default function CasePractice() {
 						/>
 					</div>
 				)}
-
 
 				<MessageDialog
 					open={isAssessmentLoading}

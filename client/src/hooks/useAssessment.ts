@@ -185,3 +185,10 @@ export function useAssessmentMock(): UseAssessmentResult {
 
 	return { assessment, transcript, loading, error, run, reset };
 }
+
+import { MOCK_VOICE_AGENT } from "@/lib/config";
+export function useAssessmentAuto(): UseAssessmentResult {
+	const real = useAssessment();
+	const mock = useAssessmentMock();
+	return MOCK_VOICE_AGENT ? mock : real;
+}
