@@ -1,15 +1,15 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRoute, useLocation } from "wouter";
-import Header from "@/components/Header";
-import CaseBrief from "@/components/CaseBrief";
-import VoiceAgentInterface from "@/components/VoiceAgentInterface";
-import TwoColumnRow from "@/components/layout/TwoColumnRow";
-import MessageDialog from "@/components/MessageDialog";
+import Header from "@/components/shared/Header";
+import CaseBrief from "@/components/casePractice/CaseBrief";
+import VoiceAgentInterface from "@/components/casePractice/VoiceAgentInterface";
+import TwoColumnRow from "@/components/casePractice/TwoColumnRow";
+import MessageDialog from "@/components/casePractice/MessageDialog";
 import { postCoachAndStream } from "@/lib/coach";
-import CoachInterface from "@/components/CoachInterface";
+import CoachInterface from "@/components/casePractice/CoachInterface";
 import { medicalCases } from "@shared/cases";
 import type { Assessment } from "@shared/schemas/assessment";
-import AssessmentCard from "@/components/AssessmentCard";
+import AssessmentCard from "@/components/casePractice/AssessmentCard";
 import type { CoachMessage, CoachRequestBody } from "@shared/schemas/coach";
 import { useAssessmentAuto } from "@/hooks/useAssessment";
  

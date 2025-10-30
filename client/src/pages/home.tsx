@@ -1,7 +1,7 @@
 import { useLocation } from "wouter";
-import Header from "@/components/Header";
-import InstructionSteps from "@/components/InstructionSteps";
-import CaseCard from "@/components/CaseCard";
+import Header from "@/components/shared/Header";
+import InstructionSteps from "@/components/home/InstructionSteps";
+import CaseCard from "@/components/casePractice/CaseCard";
 import { medicalCases } from "@shared/cases";
 
 export default function Home() {
