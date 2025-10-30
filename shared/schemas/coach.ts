@@ -5,7 +5,7 @@ export const coachMessageSchema = z.object({
 	id: z.string(),
 	role: z.enum(["user", "assistant"]),
 	content: z.string().max(8000),
-	timestamp: z.date(),
+	timestamp: z.coerce.date(),
 });
 
 export type CoachMessage = z.infer<typeof coachMessageSchema>;

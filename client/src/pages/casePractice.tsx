@@ -78,12 +78,10 @@ export default function CasePractice() {
 		(async () => {
 			try {
 				setIsAssessmentLoading(true);
-				await assessmentHook.run(conversationId, medicalCase);
-				if (assessmentHook.error) {
-					throw new Error(assessmentHook.error);
-				}
-				setAssessment(assessmentHook.assessment);
-				setTranscript(assessmentHook.transcript);
+				const { assessment: nextAssessment, transcript: nextTranscript } =
+					await assessmentHook.run(conversationId, medicalCase);
+				setAssessment(nextAssessment);
+				setTranscript(nextTranscript);
 			} catch (e: any) {
 				setAssessment(null);
 				setTranscript(null);
