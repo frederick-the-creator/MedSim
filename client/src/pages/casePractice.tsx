@@ -17,12 +17,8 @@ import { useAssessmentAuto } from "@/hooks/useAssessment";
 export default function CasePractice() {
 	const [, params] = useRoute("/case/:id");
 	const [, setLocation] = useLocation();
-	const [isAssessmentLoading, setIsAssessmentLoading] = useState(false);
-	const [assessment, setAssessment] = useState<Assessment | null>(null);
-	const [transcript, setTranscript] = useState<string | null>(null);
 	const [coachMessages, setCoachMessages] = useState<CoachMessage[]>([]);
 	const [isChatLoading, setIsChatLoading] = useState(false);
-	const [assessmentError, setAssessmentError] = useState<string | null>(null);
 	const [isErrorOpen, setIsErrorOpen] = useState(false);
 	const secondRowRef = useRef<HTMLDivElement | null>(null);
 
@@ -30,14 +26,12 @@ export default function CasePractice() {
 	const medicalCase = medicalCases.find((c) => c.id === caseId);
 
 	// Auto-select real vs mock assessment hook
-	const assessmentHook = useAssessmentAuto();
+	const { assessment, transcript, loading, error, run, reset } = useAssessmentAuto();
 	const { postCoachAndStream } = useCoach();
 
 	useEffect(() => {
-		// Reset state when case changes
-		setIsAssessmentLoading(false);
-		setAssessment(null);
-		setTranscript(null);
+		// Reset assessment state when case changes
+		reset();
 	}, [caseId]);
 
 	useEffect(() => {
@@ -77,21 +71,12 @@ export default function CasePractice() {
 		if (!conversationId) return;
 		(async () => {
 			try {
-				setIsAssessmentLoading(true);
-				const { assessment: nextAssessment, transcript: nextTranscript } =
-					await assessmentHook.run(conversationId, medicalCase);
-				setAssessment(nextAssessment);
-				setTranscript(nextTranscript);
+				await run(conversationId, medicalCase);
 			} catch (e: any) {
-				setAssessment(null);
-				setTranscript(null);
-				setAssessmentError(e?.message ?? "Failed to generate assessment.");
 				setIsErrorOpen(true);
-			} finally {
-				setIsAssessmentLoading(false);
 			}
 		})();
-	}, [medicalCase, assessmentHook]);
+	}, [medicalCase, run]);
 
 	const handleSendMessage = useCallback((text: string) => {
 		const userMsg: CoachMessage = {
@@ -177,8 +162,8 @@ export default function CasePractice() {
 				)}
 
 				<MessageDialog
-					open={isAssessmentLoading}
-					onOpenChange={(open) => !open && setIsAssessmentLoading(false)}
+					open={loading}
+					onOpenChange={() => {}}
 					title="Generating assessment…"
 					showSpinner
 				/>
@@ -187,7 +172,7 @@ export default function CasePractice() {
 					open={isErrorOpen}
 					onOpenChange={setIsErrorOpen}
 					title="Assessment failed"
-					description={assessmentError || "Something went wrong. Please try again later."}
+					description={error || "Something went wrong. Please try again later."}
 					actionLabel="OK"
 					onAction={() => setIsErrorOpen(false)}
 				/>
