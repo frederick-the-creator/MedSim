@@ -2,8 +2,8 @@ import { MedicalCase } from "@shared/schemas/case";
 import type { Assessment } from "@shared/schemas/assessment";
 
 type AssessmentResult = {
-	assessment: Assessment | null;
-	transcript: string | null;
+	assessment: Assessment;
+	transcript: string;
 };
 
 export async function fetchAssessment(
@@ -23,7 +23,7 @@ export async function fetchAssessment(
 	}
 	const json = await resp.json();
 	return {
-		assessment: json.assessment ?? null,
-		transcript: json.transcript ?? null,
+		assessment: json.assessment,
+		transcript: json.transcript,
 	};
 }
