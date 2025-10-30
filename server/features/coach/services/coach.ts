@@ -4,15 +4,15 @@ import type { MedicalCase } from "@shared/schemas/case";
 export async function buildCoachSystemInstruction(
 	assessment: string,
 	transcript: string,
-	medicalCase?: MedicalCase,
+	medicalCase: MedicalCase,
 ): Promise<string> {
 	return [
 		coachPersona.trim(),
 		"=== CASE CONTEXT ===",
-		medicalCase ? JSON.stringify(medicalCase, null, 2) : "(none provided)",
+		JSON.stringify(medicalCase, null, 2),
 		"=== ASSESSMENT ===",
-		assessment || "(none provided)",
+		assessment,
 		"=== TRANSCRIPT ===",
-		transcript || "(none provided)",
+		transcript,
 	].join("\n\n");
 }

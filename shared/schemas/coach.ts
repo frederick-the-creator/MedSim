@@ -12,9 +12,9 @@ export type CoachMessage = z.infer<typeof coachMessageSchema>;
 
 export const coachRequestSchema = z.object({
 	messages: z.array(coachMessageSchema).max(100),
-	transcript: z.string().optional().default(""),
-	assessment: z.string().optional().default(""),
-	medicalCase: medicalCaseSchema.optional(),
+	transcript: z.string(),
+	assessment: z.string(),
+	medicalCase: medicalCaseSchema,
 });
 
 export type CoachRequestBody = z.infer<typeof coachRequestSchema>;

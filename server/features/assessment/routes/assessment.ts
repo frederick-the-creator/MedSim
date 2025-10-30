@@ -4,6 +4,7 @@ import {
 	fetchTranscriptFromElevenLabs,
 	assessWithGemini,
 } from "../services/assessment";
+import { isAssessment } from "@server/shared/utils/validation";
 import { Request, Response, NextFunction } from "express";
 
 export async function assessmentRoute(
@@ -31,6 +32,11 @@ export async function assessmentRoute(
 		medicalCase: medicalCaseString,
 		transcript,
 	});
+
+	if (!assessment || !isAssessment(assessment)) {
+		res.status(502).json({ message: "Assessment generation failed" });
+		return;
+	}
 
 	res.json({ transcript, assessment });
 	return;

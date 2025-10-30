@@ -17,8 +17,8 @@ export async function coachRoute(
 	const ai = new GoogleGenAI({ apiKey });
 
 	const systemInstruction = await buildCoachSystemInstruction(
-		body.assessment ?? "",
-		body.transcript ?? "",
+		body.assessment,
+		body.transcript,
 		body.medicalCase,
 	);
 

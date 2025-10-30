@@ -109,10 +109,13 @@ export default function CasePractice() {
 		setIsChatLoading(true);
 		(async () => {
 			try {
+				if (!transcript || !assessment) {
+					throw new Error("Missing transcript or assessment");
+				}
 				const body: CoachRequestBody = {
 					messages: [...coachMessages, userMsg],
-					transcript: transcript ?? "",
-					assessment: assessment ? JSON.stringify(assessment) : "",
+					transcript,
+					assessment: JSON.stringify(assessment),
 					medicalCase,
 				};
 				await postCoachAndStream(body, (acc: string) => {
@@ -149,7 +152,7 @@ export default function CasePractice() {
 					}
 				/>
 
-				{assessment && (
+				{assessment && transcript && (
 					<div ref={secondRowRef} className="mt-8">
 							<TwoColumnRow
 								split="1-1"
