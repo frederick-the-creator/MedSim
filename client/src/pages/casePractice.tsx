@@ -5,7 +5,7 @@ import CaseBrief from "@/components/casePractice/CaseBrief";
 import VoiceAgentInterface from "@/components/casePractice/VoiceAgentInterface";
 import TwoColumnRow from "@/components/casePractice/TwoColumnRow";
 import MessageDialog from "@/components/casePractice/MessageDialog";
-import { postCoachAndStream } from "@/lib/coach";
+import { useCoach } from "@/hooks/useCoach";
 import CoachInterface from "@/components/casePractice/CoachInterface";
 import { medicalCases } from "@shared/cases";
 import type { Assessment } from "@shared/schemas/assessment";
@@ -31,6 +31,7 @@ export default function CasePractice() {
 
 	// Auto-select real vs mock assessment hook
 	const assessmentHook = useAssessmentAuto();
+	const { postCoachAndStream } = useCoach();
 
 	useEffect(() => {
 		// Reset state when case changes
