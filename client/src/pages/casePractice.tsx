@@ -4,7 +4,7 @@ import Header from "@/components/Header";
 import CaseBrief from "@/components/CaseBrief";
 import VoiceAgentInterface from "@/components/VoiceAgentInterface";
 import TwoColumnRow from "@/components/layout/TwoColumnRow";
-import AssessmentDialog from "@/components/AssessmentDialog";
+import MessageDialog from "@/components/MessageDialog";
 import { fetchAssessment } from "@/lib/assessment";
 import { postCoachAndStream } from "@/lib/coach";
 import CoachInterface from "@/components/CoachInterface";
@@ -22,6 +22,8 @@ export default function CasePractice() {
 	const [transcript, setTranscript] = useState<string | null>(null);
 	const [coachMessages, setCoachMessages] = useState<CoachMessage[]>([]);
 	const [isChatLoading, setIsChatLoading] = useState(false);
+	const [assessmentError, setAssessmentError] = useState<string | null>(null);
+	const [isErrorOpen, setIsErrorOpen] = useState(false);
 	const secondRowRef = useRef<HTMLDivElement | null>(null);
 
 	const caseId = params?.id ? parseInt(params.id) : null;
@@ -76,7 +78,10 @@ export default function CasePractice() {
 				setAssessment(result.assessment);
 				setTranscript(result.transcript);
 			} catch (e: any) {
-				setAssessment(e?.message ?? "Assessment failed");
+				setAssessment(null);
+				setTranscript(null);
+				setAssessmentError(e?.message ?? "Failed to generate assessment.");
+				setIsErrorOpen(true);
 			} finally {
 				setIsAssessmentLoading(false);
 			}
@@ -143,7 +148,7 @@ export default function CasePractice() {
 					}
 				/>
 
-					{assessment && (
+				{assessment && (
 					<div ref={secondRowRef} className="mt-8">
 							<TwoColumnRow
 								split="1-1"
@@ -162,9 +167,21 @@ export default function CasePractice() {
 					</div>
 				)}
 
-				<AssessmentDialog
+
+				<MessageDialog
 					open={isAssessmentLoading}
 					onOpenChange={(open) => !open && setIsAssessmentLoading(false)}
+					title="Generating assessment…"
+					showSpinner
+				/>
+
+				<MessageDialog
+					open={isErrorOpen}
+					onOpenChange={setIsErrorOpen}
+					title="Assessment failed"
+					description={assessmentError || "Something went wrong. Please try again later."}
+					actionLabel="OK"
+					onAction={() => setIsErrorOpen(false)}
 				/>
 			</main>
 		</div>
