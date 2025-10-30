@@ -19,6 +19,7 @@ export async function coachRoute(
 	const systemInstruction = await buildCoachSystemInstruction(
 		body.assessment ?? "",
 		body.transcript ?? "",
+		body.medicalCase,
 	);
 
 	type SimpleMsg = { role: "user" | "assistant"; content: string };

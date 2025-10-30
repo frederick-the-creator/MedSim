@@ -113,6 +113,7 @@ export default function CasePractice() {
 					messages: [...coachMessages, userMsg],
 					transcript: transcript ?? "",
 					assessment: assessment ? JSON.stringify(assessment) : "",
+					medicalCase,
 				};
 				await postCoachAndStream(body, (acc: string) => {
 					setCoachMessages((prev: any[]) =>
