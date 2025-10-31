@@ -169,14 +169,12 @@ export function useVoiceAgentMock(params: UseVoiceAgentParams): VoiceAgent {
 				window.clearInterval(speakingIntervalRef.current);
 				speakingIntervalRef.current = null;
 			}
-			if (isConnected) {
+			if (conversationIdRef.current) {
 				notifyEndOnce(conversationIdRef.current);
+				conversationIdRef.current = null;
 			}
-			setIsConnected(false);
-			setIsSpeaking(false);
-			conversationIdRef.current = null;
 		};
-	}, [isConnected]);
+	}, []);
 
 	const agentState: AgentState = !isConnected
 		? null
