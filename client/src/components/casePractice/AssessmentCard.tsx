@@ -20,7 +20,7 @@ export default function AssessmentCard({ assessment }: Props) {
 	const hasRedFlags = dims.some((d) => Array.isArray(d.red_flags) && d.red_flags.length > 0);
 
 	return (
-		<ScrollArea className="h-[70vh] px-6 pb-6">
+		<div className="flex-1 relative overflow-y-auto">
 			<div className="space-y-4">
 				{/* Overview */}
 				<div className="flex items-center justify-between">
@@ -97,7 +97,7 @@ export default function AssessmentCard({ assessment }: Props) {
 					))}
 				</Accordion>
 			</div>
-		</ScrollArea>
+		</div>
 	);
 }
 

@@ -96,7 +96,7 @@ export function useAssessmentMock(): UseAssessmentResult {
 			setAssessmentError(null);
 			try {
 				// Simulate 5s backend processing delay in mock mode
-				await delay(5000);
+				await delay(1000);
 				const mockAssessment: Assessment = {
 					dimensions: {
 						rapport_introduction_structure_flow: {

@@ -45,65 +45,65 @@ export default function CoachInterface({
 
 		return (
 			<div className="flex flex-col h-full min-h-0">
-			<div className="border-b p-4 bg-card">
-				<h2 className="text-xl font-semibold" data-testid="text-patient-name">
-					Explore your assessment with our coaching agent
-				</h2>
-			</div>
+				<div className="border-b p-4 bg-card">
+					<h2 className="text-xl font-semibold" data-testid="text-patient-name">
+						Explore your assessment with our coaching agent
+					</h2>
+				</div>
 
-			<div className="flex-1 overflow-y-auto p-6 space-y-4 min-h-0">
-				<>
-					{messages.map((message) => (
-						<div
-							key={message.id}
-							className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
-							data-testid={`message-${message.role}-${message.id}`}
-						>
+				<div className="flex-1 overflow-y-auto p-6 space-y-4 min-h-0">
+					<>
+						{messages.map((message) => (
 							<div
-								className={`max-w-xl rounded-2xl px-4 py-3 ${
-									message.role === "user"
-										? "bg-primary text-primary-foreground rounded-tr-sm"
-										: "bg-card border rounded-tl-sm"
-								}`}
+								key={message.id}
+								className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
+								data-testid={`message-${message.role}-${message.id}`}
 							>
 								<div
-									className={`prose prose-sm max-w-none ${
-										message.role === "user" ? "prose-invert" : "dark:prose-invert"
+									className={`max-w-xl rounded-2xl px-4 py-3 ${
+										message.role === "user"
+											? "bg-primary text-primary-foreground rounded-tr-sm"
+											: "bg-card border rounded-tl-sm"
 									}`}
 								>
-									<ReactMarkdown remarkPlugins={[remarkGfm]}>
-										{message.content}
-									</ReactMarkdown>
+									<div
+										className={`prose prose-sm max-w-none ${
+											message.role === "user" ? "prose-invert" : "dark:prose-invert"
+										}`}
+									>
+										<ReactMarkdown remarkPlugins={[remarkGfm]}>
+											{message.content}
+										</ReactMarkdown>
+									</div>
 								</div>
 							</div>
-						</div>
-					))}
-					<div ref={messagesEndRef} />
-				</>
-			</div>
+						))}
+						<div ref={messagesEndRef} />
+					</>
+				</div>
 
-			<div className="border-t p-4 bg-background">
-				<div className="flex gap-2 max-w-3xl mx-auto">
-					<Textarea
-						value={input}
-						onChange={(e) => setInput(e.target.value)}
-						onKeyDown={handleKeyDown}
-						placeholder="Type your message..."
-						className="resize-none h-20 max-h-40 overflow-y-auto"
-						disabled={isLoading}
-						data-testid="input-message"
-					/>
-					<Button
-						onClick={handleSend}
-						disabled={!input.trim() || isLoading}
-						size="icon"
-						className="min-h-[60px] w-[60px]"
-						data-testid="button-send"
-					>
-						<Send className="w-5 h-5" />
-					</Button>
+				<div className="border-t p-4 bg-background">
+					<div className="flex gap-2 max-w-3xl mx-auto">
+						<Textarea
+							value={input}
+							onChange={(e) => setInput(e.target.value)}
+							onKeyDown={handleKeyDown}
+							placeholder="Type your message..."
+							className="resize-none h-20 max-h-40 overflow-y-auto"
+							disabled={isLoading}
+							data-testid="input-message"
+						/>
+						<Button
+							onClick={handleSend}
+							disabled={!input.trim() || isLoading}
+							size="icon"
+							className="min-h-[60px] w-[60px]"
+							data-testid="button-send"
+						>
+							<Send className="w-5 h-5" />
+						</Button>
+					</div>
 				</div>
 			</div>
-		</div>
 	);
 }

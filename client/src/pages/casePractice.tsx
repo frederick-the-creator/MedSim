@@ -3,12 +3,10 @@ import { useRoute, useLocation } from "wouter";
 import Header from "@/components/shared/Header";
 import CaseBrief from "@/components/casePractice/CaseBrief";
 import VoiceAgentInterface from "@/components/casePractice/VoiceAgentInterface";
-import TwoColumnRow from "@/components/casePractice/TwoColumnRow";
 import MessageDialog from "@/components/casePractice/MessageDialog";
 import { useCoach } from "@/hooks/useCoach";
 import CoachInterface from "@/components/casePractice/CoachInterface";
 import { medicalCases } from "@shared/cases";
-import type { Assessment } from "@shared/schemas/assessment";
 import AssessmentCard from "@/components/casePractice/AssessmentCard";
 import type { CoachMessage, CoachRequestBody } from "@shared/schemas/coach";
 import { useAssessmentAuto } from "@/hooks/useAssessment";
@@ -126,38 +124,74 @@ export default function CasePractice() {
 
 	return (
 		<div className="min-h-screen flex flex-col bg-background">
+			{/*
+				min-h-screen: Set minimum height of viewport to whole screen
+				* flex-col: Children are vertical (header, main)
+			*/}
 			<Header showBackButton onBack={handleBack} />
 
 			<main className="container mx-auto px-4 py-8">
-				<TwoColumnRow
-					left={
+				{/*
+					container: Centers your content and sets a max-width that adjusts responsively at different breakpoints (e.g., sm, md, lg).
+					mx-auto: Sets horizontal margins to auto, centering the container horizontally on the page.
+				*/}
+
+				{/* Row One */}
+				<div className={`grid lg:grid-cols-[2fr_1fr] gap-6`}>
+					{/* 
+						grid - makes into grid container
+						lg: - Applies to large screens only (on mobile all columns just get stacked vertically)
+						grid-cols-[1fr_1fr] - Grid of columns of equal width
+						gap-6: Gap between each column (horizontally, or vertical on mobile when stacked)
+					*/}
+					<div className="left bg-card border rounded-xl p-4 shadow-card animate-scale-in max-h-[70svh] md:max-h-[70vh] flex flex-col min-h-0">
+							{/* 
+								bg-card: Sets background to custom colour
+								border: Add 1px border
+								border-border: Sets border to custom colour
+								shadow-card: Adds box shadow to make the element look raised like a card.
+								animate-scale-in: Adds custom animation that makes the element scale up slightly as it appears
+								flex - Set to flex
+								flex-col - Set flex-direction to column. 
+								max-h-[70svh] md:max-h-[70vh] - Prevents this from taking up more than 70% of viewport height -> Result is CaseBrief now scrolls to stop it taking up more than vh
+										- md: apply this from the medium breakpoint upwards (i.e. only use 70vh for larger screens, use 70svh for small / mobile)
+								min-h-0 - Forces children to shrink (vertically). 
+										- Flex containers automatically shrink children horizontally. 
+										- But vertically, without this, min-height: auto is set which forces the element to grow to fit its content.
+							*/}
 						<CaseBrief medicalCase={medicalCase} />
-					}
-					right={
+					</div>
+					<div className="right bg-card border rounded-xl p-4 shadow-card animate-scale-in min-h-0">
 						<VoiceAgentInterface
 							patientName={medicalCase.vignette.background.patientName}
 							agentId={medicalCase.agentId}
 							onConversationEnd={handleEndConversation}
 						/>
-					}
-				/>
+					</div>
+				</div>
 
+				{/* Second Row */}
 				{assessment && transcript && (
-					<div ref={secondRowRef} className="mt-8">
-						<TwoColumnRow
-							split="1-1"
-							className="h-[70vh]"
-							left={
-								<AssessmentCard assessment={assessment} />
-							}
-							right={
-								<CoachInterface
+					<div ref={secondRowRef} className={`grid lg:grid-cols-[1fr_1fr] gap-6 mt-8`}>
+						{/*
+							mt-8: Adds margin to top
+						*/}
+						<div className="left bg-card border rounded-xl p-4 shadow-card animate-scale-in max-h-[70svh] md:max-h-[70vh] flex flex-col">
+							<AssessmentCard assessment={assessment} />
+						</div>
+						<div className="right bg-card border border-border rounded-xl p-4 shadow-card animate-scale-in max-h-[70svh] md:max-h-[70vh] flex flex-col min-h-0">
+							{/*
+								Size is dictated currently by:
+									- min-h-0 doesn't affect as forces children to shrink instead of expanding itself
+									- Content will dictate size
+									- Applying max-h-[70svh] md:max-h-[70vh] now dictates height
+							*/}
+							<CoachInterface
 									messages={coachMessages}
 									onSendMessage={handleSendMessage}
 									isLoading={isChatLoading}
 								/>
-							}
-						/>
+						</div>
 					</div>
 				)}
 
