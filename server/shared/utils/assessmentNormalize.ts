@@ -37,14 +37,39 @@ function coerceStringArray(value: unknown, maxLen?: number): string[] {
 	return typeof maxLen === "number" ? arr.slice(0, maxLen) : arr;
 }
 
+function parsePointString(raw: string): UnknownRecord | null {
+	const trimmed = raw.trim().replace(/^`+|`+$/g, "");
+	if (!trimmed.startsWith("{") || !trimmed.endsWith("}")) return null;
+	try {
+		const parsed = JSON.parse(trimmed);
+		if (
+			parsed &&
+			typeof (parsed as any).type === "string" &&
+			((parsed as any).type === "strength" ||
+				(parsed as any).type === "improvement") &&
+			typeof (parsed as any).text === "string"
+		) {
+			return parsed as UnknownRecord;
+		}
+		return null;
+	} catch {
+		return null;
+	}
+}
+
 function normalizePoints(
 	value: unknown,
 ): { type: "strength" | "improvement"; text: string }[] {
 	if (!Array.isArray(value)) return [];
 	const items = value
-		.map((p) =>
-			typeof p === "object" && p !== null ? (p as UnknownRecord) : null,
-		)
+		.map((p) => {
+			if (typeof p === "object" && p !== null) return p as UnknownRecord;
+			if (typeof p === "string") {
+				const parsed = parsePointString(p);
+				return parsed;
+			}
+			return null;
+		})
 		.filter((p): p is UnknownRecord => !!p)
 		.map((p) => {
 			const type =
@@ -83,6 +108,7 @@ function normalizeDimension<K extends DimensionKey>(
 }
 
 export function normalizeAssessment(raw: unknown): Assessment | null {
+	console.dir(raw, { depth: null });
 	// Start with a defensive parse of root object
 	const root: UnknownRecord | null =
 		typeof raw === "object" && raw !== null ? (raw as UnknownRecord) : null;
@@ -103,6 +129,30 @@ export function normalizeAssessment(raw: unknown): Assessment | null {
 			tmp[key] = d as UnknownRecord;
 		}
 		dimsRaw = tmp as UnknownRecord;
+	}
+
+	// Accept object keyed by display names and remap → canonical underscore keys
+	if (
+		!Array.isArray(dimsRaw) &&
+		typeof dimsRaw === "object" &&
+		dimsRaw !== null
+	) {
+		const entries = Object.entries(dimsRaw as Record<string, unknown>);
+		const hasDisplayNameKeys = entries.some(([k]) => !!NAME_TO_KEY[k]);
+		if (hasDisplayNameKeys) {
+			const tmp: Partial<
+				Record<(typeof DIMENSION_KEYS)[number], UnknownRecord>
+			> = {};
+			for (const [name, val] of entries) {
+				const key = NAME_TO_KEY[name];
+				if (!key) continue;
+				tmp[key] =
+					typeof val === "object" && val !== null
+						? (val as UnknownRecord)
+						: ({} as UnknownRecord);
+			}
+			dimsRaw = tmp as UnknownRecord;
+		}
 	}
 
 	const dimsObj: UnknownRecord =
@@ -129,6 +179,7 @@ export function normalizeAssessment(raw: unknown): Assessment | null {
 		},
 	};
 
+	console.dir(normalized, { depth: null });
 	return isAssessment(normalized) ? normalized : null;
 }
 
