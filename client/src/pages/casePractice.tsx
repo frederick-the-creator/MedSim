@@ -26,12 +26,12 @@ export default function CasePractice() {
 	const medicalCase = medicalCases.find((c) => c.id === caseId);
 
 	// Auto-select real vs mock assessment hook
-	const { assessment, transcript, loading, error, run, reset } = useAssessmentAuto();
+	const { assessment, transcript, assessmentLoading, assessmentError, runAssessment, resetAssessment } = useAssessmentAuto();
 	const { postCoachAndStream } = useCoach();
 
 	useEffect(() => {
 		// Reset assessment state when case changes
-		reset();
+		resetAssessment();
 	}, [caseId]);
 
 	useEffect(() => {
@@ -71,12 +71,12 @@ export default function CasePractice() {
 		if (!conversationId) return;
 		(async () => {
 			try {
-				await run(conversationId, medicalCase);
+				await runAssessment(conversationId, medicalCase);
 			} catch (e: any) {
 				setIsErrorOpen(true);
 			}
 		})();
-	}, [medicalCase, run]);
+	}, [medicalCase, runAssessment]);
 
 	const handleSendMessage = useCallback((text: string) => {
 		const userMsg: CoachMessage = {
@@ -137,7 +137,7 @@ export default function CasePractice() {
 						<VoiceAgentInterface
 							patientName={medicalCase.vignette.background.patientName}
 							agentId={medicalCase.agentId}
-							onEndConversation={handleEndConversation}
+							onConversationEnd={handleEndConversation}
 						/>
 					}
 				/>
@@ -162,7 +162,7 @@ export default function CasePractice() {
 				)}
 
 				<MessageDialog
-					open={loading}
+					open={assessmentLoading}
 					onOpenChange={() => {}}
 					title="Generating assessment…"
 					showSpinner
@@ -172,7 +172,7 @@ export default function CasePractice() {
 					open={isErrorOpen}
 					onOpenChange={setIsErrorOpen}
 					title="Assessment failed"
-					description={error || "Something went wrong. Please try again later."}
+					description={assessmentError || "Something went wrong. Please try again later."}
 					actionLabel="OK"
 					onAction={() => setIsErrorOpen(false)}
 				/>

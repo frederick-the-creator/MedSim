@@ -7,29 +7,27 @@ import { useVoiceAgentAuto } from "@/hooks/useVoiceAgent";
 interface VoiceAgentInterfaceProps {
 	patientName: string;
 	agentId: string;
-	onEndConversation?: (conversationId: string | null) => void;
+	onConversationEnd: (conversationId: string | null) => void;
 }
 
 export default function VoiceAgentInterface({
 	patientName,
 	agentId,
-	onEndConversation,
+	onConversationEnd,
 }: VoiceAgentInterfaceProps) {
-	const agent = useVoiceAgentAuto();
+	const voiceAgent = useVoiceAgentAuto({ onConversationEnd });
 
 	const handleStartConversation = async () => {
-		await agent.startConversation({ agentId, userId: "fixed-user-12345" });
+		await voiceAgent.startConversation({ agentId, userId: "fixed-user-12345" });
 	};
 
 	const handleEndConversation = async () => {
-		const id = agent.conversationId;
-		await agent.endConversation();
-		onEndConversation?.(id ?? null);
+		await voiceAgent.endConversation();
 	};
 
 	const getAgentStateText = () => {
-		if (agent.isConnecting) return "Connecting...";
-		if (agent.isConnected) return agent.agentState === "talking" ? "Agent is speaking" : "Listening...";
+		if (voiceAgent.isConnecting) return "Connecting...";
+		if (voiceAgent.isConnected) return voiceAgent.agentState === "talking" ? "Agent is speaking" : "Listening...";
 		return "Ready to start";
 	};
 
@@ -48,7 +46,7 @@ export default function VoiceAgentInterface({
 				<div className="flex flex-col items-center gap-6">
 					<div
 						className="relative w-48 h-48"
-						data-testid="agent-state-indicator"
+						data-testid="voiceAgent-state-indicator"
 					>
 						<div className="absolute inset-0 bg-muted rounded-full p-1 shadow-[inset_0_2px_8px_rgba(0,0,0,0.1)] dark:shadow-[inset_0_2px_8px_rgba(0,0,0,0.5)]">
 							<div
@@ -58,33 +56,33 @@ export default function VoiceAgentInterface({
 								<Orb
 									key="voice-orb"
 									colors={["#7C3AED", "#A78BFA"]}
-									agentState={agent.agentState}
+									agentState={voiceAgent.agentState}
 									volumeMode="manual"
-									getInputVolume={agent.getInputVolume}
-									getOutputVolume={agent.getOutputVolume}
+									getInputVolume={voiceAgent.getInputVolume}
+									getOutputVolume={voiceAgent.getOutputVolume}
 								/>
 							</div>
 						</div>
 					</div>
 
 					<div className="text-center">
-						<p className="text-lg font-medium" data-testid="text-agent-status">
+						<p className="text-lg font-medium" data-testid="text-voiceAgent-status">
 							{getAgentStateText()}
 						</p>
 						<p className="text-sm text-muted-foreground mt-2">
-							{agent.isConnected
+							{voiceAgent.isConnected
 								? "Speak naturally to communicate with the patient"
 								: "Press the phone button to start"}
 						</p>
 					</div>
 
 					<div className="flex gap-4">
-						{!agent.isConnected ? (
+						{!voiceAgent.isConnected ? (
 							<Button
 								onClick={handleStartConversation}
 								size="lg"
 								className="rounded-full w-16 h-16"
-								disabled={agent.isConnecting}
+								disabled={voiceAgent.isConnecting}
 								data-testid="button-start-call"
 							>
 								<Phone className="w-6 h-6" />
@@ -102,12 +100,12 @@ export default function VoiceAgentInterface({
 						)}
 					</div>
 
-					{agent.conversationId && (
+					{voiceAgent.conversationId && (
 						<p
 							className="text-xs text-muted-foreground"
 							data-testid="text-conversation-id"
 						>
-							Conversation ID: {agent.conversationId.substring(0, 8)}...
+							Conversation ID: {voiceAgent.conversationId.substring(0, 8)}...
 						</p>
 					)}
 

@@ -17,14 +17,29 @@ export type VoiceAgent = {
 	endConversation: () => Promise<void>;
 };
 
-export function useVoiceAgent(): VoiceAgent {
+export type UseVoiceAgentParams = {
+	onConversationEnd: (conversationId: string | null) => void;
+};
+
+export function useVoiceAgent(params: UseVoiceAgentParams): VoiceAgent {
 	const [conversationId, setConversationId] = useState<string | null>(null);
+	const endNotifiedRef = useRef(false);
+	const conversationIdRef = useRef<string | null>(null);
+
+	const notifyEndOnce = (id: string | null) => {
+		if (endNotifiedRef.current) return;
+		endNotifiedRef.current = true;
+		params.onConversationEnd(id);
+	};
+
 	const conversation = useConversation({
 		onConnect: () => {
 			// no-op
 		},
 		onDisconnect: () => {
-			// no-op
+			notifyEndOnce(conversationIdRef.current);
+			setConversationId(null);
+			conversationIdRef.current = null;
 		},
 		onMessage: () => {
 			// no-op
@@ -45,6 +60,8 @@ export function useVoiceAgent(): VoiceAgent {
 				userId: opts.userId ?? "fixed-user-12345",
 				clientTools: {},
 			});
+			conversationIdRef.current = id;
+			endNotifiedRef.current = false;
 			setConversationId(id);
 		} catch (error) {
 			// Surface in console; caller can also observe via connection flags
@@ -57,8 +74,11 @@ export function useVoiceAgent(): VoiceAgent {
 			await conversation.endSession();
 		} catch (error) {
 			console.error("Error ending session:", error);
+		} finally {
+			notifyEndOnce(conversationIdRef.current);
+			setConversationId(null);
+			conversationIdRef.current = null;
 		}
-		setConversationId(null);
 	};
 
 	useEffect(() => {
@@ -100,11 +120,19 @@ export function useVoiceAgent(): VoiceAgent {
 	};
 }
 
-export function useVoiceAgentMock(): VoiceAgent {
+export function useVoiceAgentMock(params: UseVoiceAgentParams): VoiceAgent {
 	const [conversationId, setConversationId] = useState<string | null>(null);
 	const [isConnected, setIsConnected] = useState(false);
 	const [isSpeaking, setIsSpeaking] = useState(false);
 	const speakingIntervalRef = useRef<number | null>(null);
+	const endNotifiedRef = useRef(false);
+	const conversationIdRef = useRef<string | null>(null);
+
+	const notifyEndOnce = (id: string | null) => {
+		if (endNotifiedRef.current) return;
+		endNotifiedRef.current = true;
+		params.onConversationEnd(id);
+	};
 
 	const startConversation = async (opts: {
 		agentId: string;
@@ -112,6 +140,8 @@ export function useVoiceAgentMock(): VoiceAgent {
 	}) => {
 		// Simulate immediate connection
 		const id = `mock-${Math.random().toString(36).slice(2, 10)}`;
+		conversationIdRef.current = id;
+		endNotifiedRef.current = false;
 		setConversationId(id);
 		setIsConnected(true);
 		if (speakingIntervalRef.current)
@@ -126,9 +156,11 @@ export function useVoiceAgentMock(): VoiceAgent {
 			window.clearInterval(speakingIntervalRef.current);
 			speakingIntervalRef.current = null;
 		}
+		notifyEndOnce(conversationIdRef.current);
 		setIsConnected(false);
 		setIsSpeaking(false);
 		setConversationId(null);
+		conversationIdRef.current = null;
 	};
 
 	useEffect(() => {
@@ -137,10 +169,14 @@ export function useVoiceAgentMock(): VoiceAgent {
 				window.clearInterval(speakingIntervalRef.current);
 				speakingIntervalRef.current = null;
 			}
+			if (isConnected) {
+				notifyEndOnce(conversationIdRef.current);
+			}
 			setIsConnected(false);
 			setIsSpeaking(false);
+			conversationIdRef.current = null;
 		};
-	}, []);
+	}, [isConnected]);
 
 	const agentState: AgentState = !isConnected
 		? null
@@ -175,8 +211,8 @@ export function useVoiceAgentMock(): VoiceAgent {
 // Convenience selector to avoid branching in components
 // Note: This calls both hooks but does not start a session until invoked.
 import { MOCK_VOICE_AGENT } from "@/lib/config";
-export function useVoiceAgentAuto(): VoiceAgent {
-	const real = useVoiceAgent();
-	const mock = useVoiceAgentMock();
+export function useVoiceAgentAuto(params: UseVoiceAgentParams): VoiceAgent {
+	const real = useVoiceAgent(params);
+	const mock = useVoiceAgentMock(params);
 	return MOCK_VOICE_AGENT ? mock : real;
 }
