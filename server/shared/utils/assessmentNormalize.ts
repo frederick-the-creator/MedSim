@@ -108,7 +108,7 @@ function normalizeDimension<K extends DimensionKey>(
 }
 
 export function normalizeAssessment(raw: unknown): Assessment | null {
-	console.dir(raw, { depth: null });
+	// console.dir(raw, { depth: null });
 	// Start with a defensive parse of root object
 	const root: UnknownRecord | null =
 		typeof raw === "object" && raw !== null ? (raw as UnknownRecord) : null;
@@ -179,7 +179,7 @@ export function normalizeAssessment(raw: unknown): Assessment | null {
 		},
 	};
 
-	console.dir(normalized, { depth: null });
+	// console.dir(normalized, { depth: null });
 	return isAssessment(normalized) ? normalized : null;
 }
 
