@@ -1,0 +1,6 @@
+---
+alwaysApply: false
+---
+
+- Don't accomodate backward compatability if you can see its not required
+- Don't make parameters optional if you can see there is no case where they are not input

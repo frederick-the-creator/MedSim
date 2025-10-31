@@ -1,3 +1,7 @@
+---
+alwaysApply: true
+---
+
 # Error Handling Rules
 
 - Use Express 5 async propagation; avoid try/catch in routes/services unless strictly required.
