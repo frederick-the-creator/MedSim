@@ -45,13 +45,13 @@ export default function CoachInterface({
 
 		return (
 			<div className="flex flex-col h-full min-h-0">
-				<div className="border-b p-4 bg-card">
+				<div className="border-b bg-card pb-4">
 					<h2 className="text-xl font-semibold" data-testid="text-patient-name">
 						Explore your assessment with our coaching agent
 					</h2>
 				</div>
 
-				<div className="flex-1 overflow-y-auto p-6 space-y-4 min-h-0">
+				<div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
 					<>
 						{messages.map((message) => (
 							<div
@@ -82,7 +82,7 @@ export default function CoachInterface({
 					</>
 				</div>
 
-				<div className="border-t p-4 bg-background">
+				<div className="pt-4 border-t">
 					<div className="flex gap-2 max-w-3xl mx-auto">
 						<Textarea
 							value={input}
