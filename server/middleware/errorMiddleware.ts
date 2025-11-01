@@ -3,11 +3,11 @@ import { ZodError } from "zod";
 import { ApiError } from "@google/genai";
 import type { Request, Response, NextFunction } from "express";
 
-export function errorMiddleware(
+export function errorEventLogger(
 	err: unknown,
 	req: Request,
 	res: Response,
-	_next: NextFunction,
+	next: NextFunction,
 ): void {
 	// Pino Logger has done the following already:
 	// -- It attached a request id (req.id) via your genReqId.
@@ -45,11 +45,8 @@ export function errorMiddleware(
 			{ reqId, issues, route: req.path, method: req.method },
 			"zod_validation_failed",
 		);
-
-		// Send final responce of 400, including the json in the 'text' field of the response
-		// After response, Pino will create summary log using configs such as customLogLevel.
-		// Final logging output is two lines of logs, correlaged with reqId
-		res.status(400).json({ error: "Invalid input", issues, requestId: reqId });
+		// Call next(err) to ensure Error object flows to pino (for summary logs) and also pass on to errorResponder middleware
+		next(err);
 		return;
 	}
 
@@ -60,7 +57,6 @@ export function errorMiddleware(
 		const name = err.name;
 		const status = err.status;
 		const message = err.message;
-
 		const payload = {
 			reqId,
 			provider: "google-genai",
@@ -73,6 +69,43 @@ export function errorMiddleware(
 			context: (res as any).locals?.context ?? undefined,
 		};
 		req.log.error(payload, "gemini_api_error");
+		next(err);
+		return;
+	}
+
+	const ser =
+		err instanceof Error
+			? { name: err.name, message: err.message, stack: err.stack }
+			: { value: err };
+
+	req.log?.error(
+		{ reqId, route: req.path, method: req.method, error: ser },
+		"unhandled_error",
+	);
+	next(err);
+}
+
+export function errorResponder(
+	err: unknown,
+	req: Request,
+	res: Response,
+	_next: NextFunction,
+): void {
+	const reqId = req.id;
+
+	if (err instanceof ZodError) {
+		const issues = err.errors.map((e) => ({
+			path: e.path.join("."),
+			message: e.message,
+		}));
+		res.status(400).json({ error: "Invalid input", issues, requestId: reqId });
+		return;
+	}
+
+	if (err instanceof ApiError) {
+		const name = err.name;
+		const status = err.status;
+		const message = err.message;
 		res.status(502).json({
 			// Send final responce of 502, including the json in the 'text' field of the response
 			error: "Upstream API error",
@@ -85,16 +118,6 @@ export function errorMiddleware(
 		return;
 	}
 
-	// ----------- ALL OTHER ERRORS -------------
-	const ser =
-		err instanceof Error
-			? { name: err.name, message: err.message, stack: err.stack } // If instance of Error, we know how to access properties
-			: { value: err }; // If unknonwn instance, just emit entire error object
-
-	req.log?.error(
-		{ reqId, route: req.path, method: req.method, error: ser },
-		"unhandled_error",
-	);
 	res.status(500).json({ error: "Internal Server Error", requestId: reqId });
 }
 

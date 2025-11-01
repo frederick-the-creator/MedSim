@@ -3,9 +3,23 @@ import pino from "pino";
 import pinoHttp from "pino-http";
 import { randomUUID } from "crypto";
 import type { IncomingMessage, ServerResponse } from "http";
+import path from "path";
+import pinoPretty from "pino-pretty";
 
 const isDev = process.env.NODE_ENV !== "production";
-const dest = pino.destination({ dest: "./test-logs.ndjson", sync: true });
+const LOG_FILE = path.resolve(process.cwd(), "tests/testLogs/test-logs.ndjson");
+const fileDest = isDev // Makes the logger synchronous, ensures writing finishes before next task / exit process
+	? pino.destination({ dest: LOG_FILE, sync: true })
+	: pino.destination({ dest: LOG_FILE }); // async, buffered
+
+const prettyStream = pinoPretty({
+	translateTime: "SYS:standard",
+	singleLine: false,
+	colorize: true,
+	messageKey: "msg",
+	ignore: "pid,hostname",
+});
+
 export const logger = pino(
 	{
 		// Pino logger instance that you can import elsewhere in your code to log messages (e.g. logger.info('Server started')).
@@ -29,23 +43,13 @@ export const logger = pino(
 		//   version: process.env.COMMIT_SHA,
 		// },
 		messageKey: "msg", // Explicitly assigns the maing message of the log to the msg key in the output
-		formatters: {
-			level: (label) => ({ level: label }), // Formatter to customise log output. Converts numeric level to string (20 -> debug)
-		},
-		transport: isDev // Enable pretty printing in dev (else leave as raw JSON)
-			? {
-					target: "pino-pretty",
-					options: {
-						translateTime: "SYS:standard",
-						singleLine: false,
-						colorize: true,
-						messageKey: "msg",
-						ignore: "pid,hostname",
-					},
-				}
-			: undefined, // No formatting for production
+		formatters: { level: (label) => ({ level: label }) },
 	},
-	dest,
+	pino.multistream([
+		// Allows writing same data to multiple outputs at once
+		{ stream: fileDest }, // Write output to file in either dev or production
+		...(isDev ? [{ stream: prettyStream }] : []), // Write output to stdout in non-production
+	] as any),
 );
 
 // src/httpLogger.ts

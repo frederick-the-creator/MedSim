@@ -8,7 +8,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic } from "./vite";
 import { httpLogger, logger } from "@middleware/httpLogger";
-import { errorMiddleware } from "@middleware/errorMiddleware";
+import { errorEventLogger, errorResponder } from "@middleware/errorMiddleware";
 
 const app = express();
 
@@ -20,7 +20,8 @@ app.use(httpLogger);
 (async () => {
 	const server = await registerRoutes(app);
 
-	app.use(errorMiddleware);
+	app.use(errorEventLogger);
+	app.use(errorResponder);
 
 	// importantly only setup vite in development and after
 	// setting up all the other routes so the catch-all route

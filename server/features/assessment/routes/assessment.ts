@@ -6,6 +6,7 @@ import {
 } from "../services/assessment";
 import { isAssessment } from "@server/shared/utils/validation";
 import { Request, Response, NextFunction } from "express";
+import { logger } from "@middleware/httpLogger";
 
 export async function assessmentRoute(
 	req: Request,
