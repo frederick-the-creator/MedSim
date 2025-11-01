@@ -6,19 +6,49 @@ import type { IncomingMessage, ServerResponse } from "http";
 import path from "path";
 import pinoPretty from "pino-pretty";
 
-const isDev = process.env.NODE_ENV !== "production";
+const isProd = process.env.NODE_ENV === "production";
+const wantPretty = (process.env.LOG_PRETTY ?? "").toLowerCase() === "true";
 const LOG_FILE = path.resolve(process.cwd(), "tests/testLogs/test-logs.ndjson");
-const fileDest = isDev // Makes the logger synchronous, ensures writing finishes before next task / exit process
-	? pino.destination({ dest: LOG_FILE, sync: true })
-	: pino.destination({ dest: LOG_FILE }); // async, buffered
-
+// file only in dev (keeps prod stateless)
+const fileDest = pino.destination({ dest: LOG_FILE, sync: !isProd });
 const prettyStream = pinoPretty({
 	translateTime: "SYS:standard",
 	singleLine: false,
-	colorize: true,
+	colorize: process.stdout.isTTY, // avoid noisy ANSI in non-TTY collectors
 	messageKey: "msg",
 	ignore: "pid,hostname",
 });
+const streams: { stream: any }[] = [];
+// dev: file + pretty console
+if (!isProd) {
+	streams.push({ stream: fileDest });
+	streams.push({ stream: prettyStream });
+} else {
+	// prod: choose pretty OR JSON by env var
+	streams.push({ stream: wantPretty ? prettyStream : pino.destination(1) }); // 1 = stdout
+}
+
+// const isDev = process.env.NODE_ENV !== "production";
+// const streams: { stream: any }[] = [];
+
+// if (isDev && process.env.LOG_TO_FILE !== "false") {
+//   // Synchronous in dev so tests/exit don’t drop logs
+//   streams.push({ stream: pino.destination({ dest: LOG_FILE, sync: true }) });
+// }
+// // Always send structured JSON to stdout so platforms (Railway, Docker, k8s) can collect it
+// streams.push({ stream: process.stdout });
+
+// const fileDest = isDev // Makes the logger synchronous, ensures writing finishes before next task / exit process
+// 	? pino.destination({ dest: LOG_FILE, sync: true })
+// 	: pino.destination({ dest: LOG_FILE }); // async, buffered
+
+// const prettyStream = pinoPretty({
+// 	translateTime: "SYS:standard",
+// 	singleLine: false,
+// 	colorize: true,
+// 	messageKey: "msg",
+// 	ignore: "pid,hostname",
+// });
 
 export const logger = pino(
 	{
@@ -35,7 +65,7 @@ export const logger = pino(
 
 		// Below is specifc configs for our logger
 
-		level: process.env.LOG_LEVEL ?? (isDev ? "debug" : "info"),
+		level: process.env.LOG_LEVEL ?? (isProd ? "info" : "debug"),
 		// Set LOG_LEVEL via environment variable. If not available and mode is dev, then give detailed level of data
 
 		// base: {
@@ -46,11 +76,12 @@ export const logger = pino(
 		messageKey: "msg", // Explicitly assigns the maing message of the log to the msg key in the output
 		formatters: { level: (label) => ({ level: label }) },
 	},
-	pino.multistream([
-		// Allows writing same data to multiple outputs at once
-		{ stream: fileDest }, // Write output to file in either dev or production
-		...(isDev ? [{ stream: prettyStream }] : []), // Write output to stdout in non-production
-	] as any),
+	pino.multistream(streams as any),
+	// pino.multistream([
+	// 	// Allows writing same data to multiple outputs at once
+	// 	{ stream: fileDest }, // Write output to file in either dev or production
+	// 	...(isDev ? [{ stream: prettyStream }] : []), // Write output to stdout in non-production
+	// ] as any),
 );
 
 // src/httpLogger.ts
