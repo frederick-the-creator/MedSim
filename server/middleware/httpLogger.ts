@@ -92,6 +92,20 @@ export const httpLogger = pinoHttp({
 
 	logger, // Use the logger instance created above
 
+	autoLogging: {
+		ignore: (req: any) =>
+			// Ignore Vite asset requests
+			req.url.startsWith("/@vite") ||
+			req.url.startsWith("/@fs") ||
+			req.url.startsWith("/src") ||
+			req.url.startsWith("/favicon") ||
+			req.url.startsWith("/@react") ||
+			req.url.includes("/node_modules/") ||
+			req.url.endsWith(".js") ||
+			req.url.endsWith(".css") ||
+			req.url.endsWith(".map"),
+	},
+
 	// Generate a request ID and set on both request and resopnse for traceability
 	// Makes it easy to correlate logs from the same request across distributed systems
 	// ID is accessible via req.headers.x-request-id
