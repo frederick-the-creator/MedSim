@@ -1,43 +1,131 @@
-import { type Request, type Response, type NextFunction } from "express";
+// src/logger.ts
+import pino from "pino";
+import pinoHttp from "pino-http";
+import { randomUUID } from "crypto";
+import type { IncomingMessage, ServerResponse } from "http";
 
-export function log(message: string, source = "express") {
-	const formattedTime = new Date().toLocaleTimeString("en-US", {
-		hour: "numeric",
-		minute: "2-digit",
-		second: "2-digit",
-		hour12: true,
-	});
+const isDev = process.env.NODE_ENV !== "production";
 
-	console.log(`${formattedTime} [${source}] ${message}`);
-}
+export const logger = pino({
+	// Pino logger instance that you can import elsewhere in your code to log messages (e.g. logger.info('Server started')).
+	// Instance has methods to record logs
+	// Instead of console.log() -> logger.info()
+	// Logger Methods
+	// logger.fatal() - Critical failures such as app not starting
+	// logger.error() - Errors such as database failures
+	// logger.info() - Normal runtime information
+	// logger.debug() - Verbose development information
+	// logger.trace() - Extremely detailed low-level information
 
-export function httpLogger(req: Request, res: Response, next: NextFunction) {
-	const start = Date.now();
-	const path = req.path;
-	let capturedJsonResponse: Record<string, any> | undefined = undefined;
+	// Below is specifc configs for our logger
 
-	type JsonArgs = Parameters<typeof res.json>;
-	const originalResJson = res.json.bind(res);
-	res.json = function (...args: JsonArgs) {
-		capturedJsonResponse = args[0] as Record<string, any>;
-		return originalResJson(...args);
-	} as any;
+	level: process.env.LOG_LEVEL ?? (isDev ? "debug" : "info"),
+	// Set LOG_LEVEL via environment variable. If not available and mode is dev, then give detailed level of data
 
-	res.on("finish", () => {
-		const duration = Date.now() - start;
-		if (path.startsWith("/api")) {
-			let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-			if (capturedJsonResponse) {
-				logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
+	// base: {
+	//   // add your service metadata here if you want
+	//   service: process.env.SERVICE_NAME ?? 'api',
+	//   version: process.env.COMMIT_SHA,
+	// },
+	messageKey: "msg", // Explicitly assigns the maing message of the log to the msg key in the output
+	formatters: {
+		level: (label) => ({ level: label }), // Formatter to customise log output. Converts numeric level to string (20 -> debug)
+	},
+	transport: isDev // Enable pretty printing in dev (else leave as raw JSON)
+		? {
+				target: "pino-pretty",
+				options: {
+					translateTime: "SYS:standard",
+					singleLine: false,
+					colorize: true,
+					messageKey: "msg",
+					ignore: "pid,hostname",
+				},
 			}
+		: undefined, // No formatting for production
+});
 
-			if (logLine.length > 80) {
-				logLine = logLine.slice(0, 79) + "…";
-			}
+// src/httpLogger.ts
 
-			log(logLine);
-		}
-	});
+export const httpLogger = pinoHttp({
+	// pinoHttp function creates HTTP middleware for logging requests and responses in JSON format
+	// Pino logs the data after a response is returned.
 
+	logger, // Use the logger instance created above
+
+	// Generate a request ID and set on both request and resopnse for traceability
+	// Makes it easy to correlate logs from the same request across distributed systems
+	// ID is accessible via req.headers.x-request-id
+	genReqId: (req: IncomingMessage, res: ServerResponse) => {
+		const hdr = (req.headers["x-request-id"] ||
+			req.headers["x-correlation-id"]) as string | undefined;
+		const id = hdr || randomUUID();
+		(req as any).id = id;
+		res.setHeader("x-request-id", id);
+		return id;
+	},
+
+	// Serializer controls what data gets logged
+	// Summary Log
+	// -- Will always include req & res, additionally err if an error occured
+	// -- Event logs only include the objects we choose to log in errorMiddleware
+	serializers: {
+		// For errors, we use pino built in serialiser (these can convert Error objects into JSON-safe form)
+		// Using here extracts message and stack trace using Pino standard serializer
+		err: pino.stdSerializers.err,
+
+		// For requests, we use the above created request id, method,
+		req: (req: any) => ({
+			id: req.id,
+			method: req.method,
+			url: req.url, // Path and query string of HTTP request
+			// optional: remote address data (comment if noisy)
+			// remoteAddress: req.socket?.remoteAddress,
+			// remotePort: req.socket?.remotePort,
+			headers: {
+				"user-agent": req.headers["user-agent"],
+			},
+		}),
+		res: pino.stdSerializers.res,
+	},
+
+	// --------- Log Configs --- Apply to SUMARRY LOGS ONLY
+	// Allows us to change log level dynamically, directly mapping our res.status() code to our logger methods
+	// Pino follows the request and when a response is returned it uses the res.status() code to determine logger method to use.
+	customLogLevel: function (
+		_req: IncomingMessage,
+		res: ServerResponse<IncomingMessage>,
+		err?: Error,
+	) {
+		if (err || res.statusCode >= 500) return "error";
+		if (res.statusCode >= 400) return "warn";
+		return "info";
+	},
+
+	// Customise text of log messages
+	customSuccessMessage: function (req, res) {
+		return "http_request_success";
+	},
+	customErrorMessage: function (_req, res) {
+		return res.statusCode >= 500 ? "http_request_failed" : "http_request_error";
+	},
+
+	// Allows us to inject extra fields into each log line
+	customProps: function (req, res) {
+		const start = (req as any).startTime as bigint | undefined;
+		const durMs = start
+			? Number((process.hrtime.bigint() - start) / 1_000_000n)
+			: undefined;
+		return {
+			reqId: (req as any).id,
+			durationMs: durMs,
+			path: (req as any).originalUrl || (req as any).url,
+		};
+	},
+});
+
+// tiny starter to capture precise start time
+export function startTimer(req: any, _res: any, next: any) {
+	req.startTime = process.hrtime.bigint();
 	next();
 }

@@ -7,7 +7,7 @@ dotenv.config({ path: path.resolve(__dirname, "../.env.local") });
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic } from "./vite";
-import { httpLogger, log } from "@middleware/httpLogger";
+import { httpLogger, logger } from "@middleware/httpLogger";
 import { errorMiddleware } from "@middleware/errorMiddleware";
 
 const app = express();
@@ -43,7 +43,7 @@ app.use(httpLogger);
 				host: "0.0.0.0",
 			},
 			() => {
-				log(`serving on port ${port}`);
+				logger.info(`serving on port ${port}`);
 			},
 		);
 	}
