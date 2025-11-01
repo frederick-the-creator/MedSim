@@ -31,6 +31,7 @@ export const logger = pino(
 		// logger.info() - Normal runtime information
 		// logger.debug() - Verbose development information
 		// logger.trace() - Extremely detailed low-level information
+		// We don't use logger. directly. Instead we use the req.log to ensure we get the context of the request
 
 		// Below is specifc configs for our logger
 
@@ -76,14 +77,15 @@ export const httpLogger = pinoHttp({
 	// Summary Log
 	// -- Will always include req & res, additionally err if an error occured
 	// -- Event logs only include the objects we choose to log in errorMiddleware
+	// Below serialisers used for both event and summary logs
 	serializers: {
 		// For errors, we use pino built in serialiser (these can convert Error objects into JSON-safe form)
 		// Using here extracts message and stack trace using Pino standard serializer
 		err: pino.stdSerializers.err,
 
-		// For requests, we use the above created request id, method,
+		// For requests, we use the above created request id
 		req: (req: any) => ({
-			id: req.id,
+			id: req.id, // All logs emit req within objects, so we get req id here
 			method: req.method,
 			url: req.url, // Path and query string of HTTP request
 			// optional: remote address data (comment if noisy)
@@ -118,15 +120,17 @@ export const httpLogger = pinoHttp({
 	},
 
 	// Allows us to inject extra fields into each log line
+	// Affects both child and summary logs
 	customProps: function (req, res) {
 		const start = (req as any).startTime as bigint | undefined;
 		const durMs = start
 			? Number((process.hrtime.bigint() - start) / 1_000_000n)
 			: undefined;
 		return {
-			reqId: (req as any).id,
-			durationMs: durMs,
-			path: (req as any).originalUrl || (req as any).url,
+			// Remove this line and neither event or summary has reqId or path
+			// reqId: (req as any).id,
+			durationMs: durMs, // Doesn't apply to event logs for some reason
+			// path: (req as any).originalUrl || (req as any).url,
 		};
 	},
 });

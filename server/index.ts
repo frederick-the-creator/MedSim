@@ -7,7 +7,7 @@ dotenv.config({ path: path.resolve(__dirname, "../.env.local") });
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic } from "./vite";
-import { httpLogger, logger } from "@middleware/httpLogger";
+import { httpLogger, logger, startTimer } from "@middleware/httpLogger";
 import { errorEventLogger, errorResponder } from "@middleware/errorMiddleware";
 
 const app = express();
@@ -16,6 +16,7 @@ app.set("trust proxy", 1);
 
 app.use(express.json());
 app.use(httpLogger);
+app.use(startTimer);
 
 (async () => {
 	const server = await registerRoutes(app);
