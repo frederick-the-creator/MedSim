@@ -5,27 +5,33 @@ import { randomUUID } from "crypto";
 import type { IncomingMessage, ServerResponse } from "http";
 import path from "path";
 import pinoPretty from "pino-pretty";
+import fs from "fs";
 
 const isProd = process.env.NODE_ENV === "production";
 const wantPretty = (process.env.LOG_PRETTY ?? "").toLowerCase() === "true";
+
 const LOG_FILE = path.resolve(process.cwd(), "tests/testLogs/test-logs.ndjson");
-// file only in dev (keeps prod stateless)
-const fileDest = pino.destination({ dest: LOG_FILE, sync: !isProd });
-const prettyStream = pinoPretty({
-	translateTime: "SYS:standard",
-	singleLine: false,
-	colorize: process.stdout.isTTY, // avoid noisy ANSI in non-TTY collectors
-	messageKey: "msg",
-	ignore: "pid,hostname",
-});
+
 const streams: { stream: any }[] = [];
-// dev: file + pretty console
+
 if (!isProd) {
-	streams.push({ stream: fileDest });
-	streams.push({ stream: prettyStream });
+	// Local dev: write to file
+	fs.mkdirSync(path.dirname(LOG_FILE), { recursive: true });
+	streams.push({ stream: pino.destination({ dest: LOG_FILE, sync: !isProd }) });
+}
+
+// Always log to stdout (works in Railway)
+if (process.env.LOG_PRETTY === "true") {
+	const pretty = pinoPretty({
+		translateTime: "SYS:standard",
+		singleLine: false,
+		colorize: process.stdout.isTTY, // avoid noisy ANSI in non-TTY collectors
+		messageKey: "msg",
+		ignore: "pid,hostname",
+	});
+	streams.push({ stream: pretty });
 } else {
-	// prod: choose pretty OR JSON by env var
-	streams.push({ stream: wantPretty ? prettyStream : pino.destination(1) }); // 1 = stdout
+	streams.push({ stream: pino.destination(1) }); // stdout JSON
 }
 
 // const isDev = process.env.NODE_ENV !== "production";
