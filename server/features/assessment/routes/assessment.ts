@@ -25,6 +25,10 @@ export async function assessmentRoute(
 		return;
 	}
 
+	// console.log("transcript");
+	// console.log(transcript);
+	console.log("Transcript successfully retrieved");
+
 	const medicalCaseString = JSON.stringify(medicalCase);
 	const systemInstruction = assessmentSystem;
 	const assessment = await assessWithGemini({
@@ -33,10 +37,16 @@ export async function assessmentRoute(
 		transcript,
 	});
 
+	// console.log("assessment");
+	// console.log(assessment);
+	console.log("Assessment successfully retrieved");
+
 	if (!assessment || !isAssessment(assessment)) {
 		res.status(502).json({ message: "Assessment generation failed" });
 		return;
 	}
+
+	console.log("Assessment successfully retrieved");
 
 	res.json({ transcript, assessment });
 	return;

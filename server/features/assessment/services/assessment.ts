@@ -66,8 +66,9 @@ async function pollTranscriptWithBackoff(
 	let attempt = 0;
 	let transcript = "";
 	while (Date.now() < deadline) {
-		console.log("Pollint Transcript");
+		console.log("Polling Transcript");
 		transcript = await getElevenTranscriptOnce(conversationId);
+
 		if (transcript) break;
 		const delay = Math.floor(
 			Math.random() * Math.min(cfg.maxDelayMs, cfg.baseMs * 2 ** attempt),
@@ -127,15 +128,29 @@ async function requestAssessmentJson(
 	model: string,
 	schema: unknown,
 ): Promise<{ rawText: string; parsed: unknown }> {
+	// const response = await ai.models.generateContent({
+	// 	config: {
+	// 		systemInstruction,
+	// 		responseMimeType: "application/json",
+	// 		responseJsonSchema: schema,
+	// 	},
+	// 	contents,
+	// 	model,
+	// });
+
+	// Test Error handling by making this fail
 	const response = await ai.models.generateContent({
 		config: {
 			systemInstruction,
 			responseMimeType: "application/json",
 			responseJsonSchema: schema,
 		},
-		contents,
+		contents: [{ test: "test" }], // Test is not a valid property so should fail
 		model,
 	});
+
+	console.log("response");
+	console.log(response);
 
 	const safeText = response?.text ?? "{}";
 	let parsed: unknown = {};
@@ -211,10 +226,9 @@ export async function assessWithGemini(input: {
 	const apiKey = process.env.GEMINI_API_KEY;
 	if (!apiKey) {
 		console.error("❌ No GOOGLE_API_KEY found in environment!");
-	} else {
-		const keyPreview = `${apiKey.slice(0, 6)}...${apiKey.slice(-4)}`;
-		console.log(`Using Google API key: ${keyPreview}`);
 	}
+
+	console.log("Running Gemini Assessment");
 
 	const { GoogleGenAI } = await import("@google/genai");
 	const ai = new GoogleGenAI({ apiKey }) as unknown as GenAIClient;

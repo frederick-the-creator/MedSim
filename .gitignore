@@ -6,3 +6,5 @@ vite.config.ts.*
 *.tar.gz
 .env.local
 certs/*
+testLogs/
+test-logs.ndjson

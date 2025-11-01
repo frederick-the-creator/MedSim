@@ -97,3 +97,10 @@ export function errorMiddleware(
 	);
 	res.status(500).json({ error: "Internal Server Error", requestId: reqId });
 }
+
+// TO DO
+// Update pino serialiser response object to output assessment so I can validate schema shape
+// Update vitest to not suppress logs
+// Split error handler and responder - Add next(err) to error handler to make sure pino includes errors in summary logs. Without it, pino will just include req & res
+// -- Pino only uses err serialiser for summary if Pino receives the Error object.
+// -- If we catch the Error object in the central errorMiddleware, then it has already been caught / handled and doesn't flow to pino

@@ -5,45 +5,48 @@ import { randomUUID } from "crypto";
 import type { IncomingMessage, ServerResponse } from "http";
 
 const isDev = process.env.NODE_ENV !== "production";
+const dest = pino.destination({ dest: "./test-logs.ndjson", sync: true });
+export const logger = pino(
+	{
+		// Pino logger instance that you can import elsewhere in your code to log messages (e.g. logger.info('Server started')).
+		// Instance has methods to record logs
+		// Instead of console.log() -> logger.info()
+		// Logger Methods
+		// logger.fatal() - Critical failures such as app not starting
+		// logger.error() - Errors such as database failures
+		// logger.info() - Normal runtime information
+		// logger.debug() - Verbose development information
+		// logger.trace() - Extremely detailed low-level information
 
-export const logger = pino({
-	// Pino logger instance that you can import elsewhere in your code to log messages (e.g. logger.info('Server started')).
-	// Instance has methods to record logs
-	// Instead of console.log() -> logger.info()
-	// Logger Methods
-	// logger.fatal() - Critical failures such as app not starting
-	// logger.error() - Errors such as database failures
-	// logger.info() - Normal runtime information
-	// logger.debug() - Verbose development information
-	// logger.trace() - Extremely detailed low-level information
+		// Below is specifc configs for our logger
 
-	// Below is specifc configs for our logger
+		level: process.env.LOG_LEVEL ?? (isDev ? "debug" : "info"),
+		// Set LOG_LEVEL via environment variable. If not available and mode is dev, then give detailed level of data
 
-	level: process.env.LOG_LEVEL ?? (isDev ? "debug" : "info"),
-	// Set LOG_LEVEL via environment variable. If not available and mode is dev, then give detailed level of data
-
-	// base: {
-	//   // add your service metadata here if you want
-	//   service: process.env.SERVICE_NAME ?? 'api',
-	//   version: process.env.COMMIT_SHA,
-	// },
-	messageKey: "msg", // Explicitly assigns the maing message of the log to the msg key in the output
-	formatters: {
-		level: (label) => ({ level: label }), // Formatter to customise log output. Converts numeric level to string (20 -> debug)
+		// base: {
+		//   // add your service metadata here if you want
+		//   service: process.env.SERVICE_NAME ?? 'api',
+		//   version: process.env.COMMIT_SHA,
+		// },
+		messageKey: "msg", // Explicitly assigns the maing message of the log to the msg key in the output
+		formatters: {
+			level: (label) => ({ level: label }), // Formatter to customise log output. Converts numeric level to string (20 -> debug)
+		},
+		transport: isDev // Enable pretty printing in dev (else leave as raw JSON)
+			? {
+					target: "pino-pretty",
+					options: {
+						translateTime: "SYS:standard",
+						singleLine: false,
+						colorize: true,
+						messageKey: "msg",
+						ignore: "pid,hostname",
+					},
+				}
+			: undefined, // No formatting for production
 	},
-	transport: isDev // Enable pretty printing in dev (else leave as raw JSON)
-		? {
-				target: "pino-pretty",
-				options: {
-					translateTime: "SYS:standard",
-					singleLine: false,
-					colorize: true,
-					messageKey: "msg",
-					ignore: "pid,hostname",
-				},
-			}
-		: undefined, // No formatting for production
-});
+	dest,
+);
 
 // src/httpLogger.ts
 

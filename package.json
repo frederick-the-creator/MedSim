@@ -11,7 +11,7 @@
 		"db:push": "drizzle-kit push",
 		"test": "vitest run",
 		"test:watch": "vitest",
-		"test:assessment": "vitest run tests/assessment.test.ts"
+		"test:assessment": "vitest run tests/assessment.test.ts --silent=false"
 	},
 	"dependencies": {
 		"@elevenlabs/client": "^0.8.1",
