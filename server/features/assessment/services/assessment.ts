@@ -128,26 +128,26 @@ async function requestAssessmentJson(
 	model: string,
 	schema: unknown,
 ): Promise<{ rawText: string; parsed: unknown }> {
-	// const response = await ai.models.generateContent({
-	// 	config: {
-	// 		systemInstruction,
-	// 		responseMimeType: "application/json",
-	// 		responseJsonSchema: schema,
-	// 	},
-	// 	contents,
-	// 	model,
-	// });
-
-	// Test Error handling by making this fail
 	const response = await ai.models.generateContent({
 		config: {
 			systemInstruction,
 			responseMimeType: "application/json",
 			responseJsonSchema: schema,
 		},
-		contents: [{ test: "test" }], // Test is not a valid property so should fail
+		contents,
 		model,
 	});
+
+	// // Test Error handling by making this fail
+	// const response = await ai.models.generateContent({
+	// 	config: {
+	// 		systemInstruction,
+	// 		responseMimeType: "application/json",
+	// 		responseJsonSchema: schema,
+	// 	},
+	// 	contents: [{ test: "test" }], // Test is not a valid property so should fail
+	// 	model,
+	// });
 
 	console.log("response");
 	console.log(response);
