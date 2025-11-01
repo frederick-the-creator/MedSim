@@ -6,10 +6,13 @@ import type { IncomingMessage, ServerResponse } from "http";
 import path from "path";
 import pinoPretty from "pino-pretty";
 import fs from "fs";
+import dotenv from "dotenv";
+import { fileURLToPath } from "url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.resolve(__dirname, "../../.env.local") });
 
 const isProd = process.env.NODE_ENV === "production";
-const wantPretty = (process.env.LOG_PRETTY ?? "").toLowerCase() === "true";
-
 const LOG_FILE = path.resolve(process.cwd(), "tests/testLogs/test-logs.ndjson");
 
 const streams: { stream: any }[] = [];
@@ -19,7 +22,6 @@ if (!isProd) {
 	fs.mkdirSync(path.dirname(LOG_FILE), { recursive: true });
 	streams.push({ stream: pino.destination({ dest: LOG_FILE, sync: !isProd }) });
 }
-
 // Always log to stdout (works in Railway)
 if (process.env.LOG_PRETTY === "true") {
 	const pretty = pinoPretty({
@@ -159,7 +161,7 @@ export const httpLogger = pinoHttp({
 	) {
 		if (err || res.statusCode >= 500) return "error";
 		if (res.statusCode >= 400) return "warn";
-		return "info";
+		return "silent";
 	},
 
 	// Customise text of log messages
