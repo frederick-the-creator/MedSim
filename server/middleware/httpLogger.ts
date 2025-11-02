@@ -64,23 +64,21 @@ export const logger = pino(
 		// Instance has methods to record logs
 		// Instead of console.log() -> logger.info()
 		// Logger Methods
-		// logger.fatal() - Critical failures such as app not starting
-		// logger.error() - Errors such as database failures
-		// logger.info() - Normal runtime information
-		// logger.debug() - Verbose development information
-		// logger.trace() - Extremely detailed low-level information
+		// logger.fatal() (level:60) - Critical failures such as app not starting
+		// logger.error() (level:50) - Errors such as database failures
+		// logger.warn() (level:40) -
+		// logger.info() (level:30) - Normal runtime information
+		// logger.debug() (level:20) - Verbose development information
+		// logger.trace() (level:10) - Extremely detailed low-level information
+
 		// We don't use logger. directly. Instead we use the req.log to ensure we get the context of the request
 
 		// Below is specifc configs for our logger
 
 		level: process.env.LOG_LEVEL ?? (isProd ? "info" : "debug"),
 		// Set LOG_LEVEL via environment variable. If not available and mode is dev, then give detailed level of data
+		// When set to info, only logs methods at this level or higher (info, warn, error, fatal) - won't emit any debug or trace
 
-		// base: {
-		//   // add your service metadata here if you want
-		//   service: process.env.SERVICE_NAME ?? 'api',
-		//   version: process.env.COMMIT_SHA,
-		// },
 		messageKey: "msg", // Explicitly assigns the maing message of the log to the msg key in the output
 		formatters: { level: (label) => ({ level: label }) },
 	},
@@ -91,8 +89,6 @@ export const logger = pino(
 	// 	...(isDev ? [{ stream: prettyStream }] : []), // Write output to stdout in non-production
 	// ] as any),
 );
-
-// src/httpLogger.ts
 
 export const httpLogger = pinoHttp({
 	// pinoHttp function creates HTTP middleware for logging requests and responses in JSON format
@@ -126,11 +122,9 @@ export const httpLogger = pinoHttp({
 		return id;
 	},
 
-	// Serializer controls what data gets logged
-	// Summary Log
-	// -- Will always include req & res, additionally err if an error occured
+	// Serializer controls what data gets logged - used for both event and summary logs
+	// -- Summary Log will always include req & res, additionally err if an error occured
 	// -- Event logs only include the objects we choose to log in errorMiddleware
-	// Below serialisers used for both event and summary logs
 	serializers: {
 		// For errors, we use pino built in serialiser (these can convert Error objects into JSON-safe form)
 		// Using here extracts message and stack trace using Pino standard serializer
@@ -160,6 +154,7 @@ export const httpLogger = pinoHttp({
 		err?: Error,
 	) {
 		if (err || res.statusCode >= 500) return "error";
+		if (res.statusCode == 422) return "error";
 		if (res.statusCode >= 400) return "warn";
 		return "silent";
 	},

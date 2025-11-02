@@ -1,6 +1,7 @@
 // src/errorMiddleware.ts
 import { ZodError } from "zod";
 import { ApiError } from "@google/genai";
+import { DomainError } from "@server/shared/errors";
 import type { Request, Response, NextFunction } from "express";
 
 export function errorEventLogger(
@@ -41,8 +42,22 @@ export function errorEventLogger(
 		}));
 
 		// Log a structured warn event using pino logger and desired fields
-		req.log.warn({ issues }, "zod_validation_failed");
+		req.log.error({ issues }, "zod_validation_failed");
 		// Call next(err) to ensure Error object flows to pino (for summary logs) and also pass on to errorResponder middleware
+		next(err);
+		return;
+	}
+
+	// --------- DOMAIN ERROR ---------
+
+	if (err instanceof DomainError) {
+		const payload = {
+			code: err.code,
+			status: err.status,
+			details: err.details,
+			context: (res as any).locals?.context ?? undefined,
+		};
+		req.log.error(payload, "domain_error");
 		next(err);
 		return;
 	}
@@ -152,7 +167,23 @@ export function errorResponder(
 	res: Response,
 	_next: NextFunction,
 ): void {
+	(res as any).err = err; // <-- make the error visible to pino-http
 	const reqId = req.id;
+
+	if (err instanceof DomainError) {
+		const details = (err as DomainError).details as any | undefined;
+		if (details?.retryAfterSecs != null) {
+			res.setHeader("Retry-After", String(details.retryAfterSecs));
+		}
+		res.status((err as DomainError).status).json({
+			error: "Domain error",
+			code: (err as DomainError).code,
+			message: (err as DomainError).message,
+			...(details ? { details } : {}),
+			requestId: reqId,
+		});
+		return;
+	}
 
 	if (err instanceof ZodError) {
 		const issues = err.errors.map((e) => ({

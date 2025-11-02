@@ -37,6 +37,8 @@ alwaysApply: true
   - Minimal shape: `{ op: "feature.operation", ...ids }`
   - Examples: `{ op: "assessment.generate", conversationId, model: "gemini-2.5-pro" }`, `{ op: "coach.stream", sessionId }`
 - Call services and return results. Only catch to add context and rethrow; otherwise bubble.
+- Call services and return results. Only catch to add context and rethrow; otherwise bubble.
+- For expected-but-failed domain states where the frontend should not retry, throw a `DomainError(422)` with a small `details` object. For polling-style flows where the client will retry, you may instead return 409 with a `Retry-After` header from the route.
 
 ## Service Rules
 
@@ -55,6 +57,14 @@ alwaysApply: true
     The middleware logs `{ provider, name, status, message(parsed), stack, context }` at error and responds 502.
 - Unknown errors: bubble → middleware logs `{ name, message, stack }` at error → respond 500 `{ error, requestId }`.
 
+## Domain Errors (422)
+
+- When the request is valid but cannot be fulfilled due to domain state (e.g., transcript not yet available and the client will not retry), throw a `DomainError` and let middleware handle it.
+- Event log: middleware logs at warn with message `domain_error` and payload `{ code, status, details, context }`.
+- Response: 422 with body `{ error: "Domain error", code, message, details?, requestId }`.
+- Headers: if `details.retryAfterSecs` is present, middleware sets `Retry-After` accordingly.
+- Do NOT map these to 502; 5xx is reserved for upstream or internal failures.
+
 ## Logging Levels
 
 - Summary logs (transport): controlled by `customLogLevel` in `httpLogger` (silent for 2xx/3xx, warn for 4xx, error for 5xx or thrown error).
@@ -71,6 +81,7 @@ alwaysApply: true
 ## Response Policy
 
 - 400: validation problems (Zod); include `issues` and `requestId`.
+- 422: domain errors; include `code`, `message`, optional `details`, and `requestId`. If `details.retryAfterSecs` exists, set `Retry-After`.
 - 502: upstream API failures; include `provider`, `name`, `status`, `message` (as provided), and `reqId`.
 - 500: everything else; include `requestId` only.
 
@@ -81,6 +92,9 @@ alwaysApply: true
   - Infer `provider` from the regex group or `res.locals.context?.provider`.
   - If a valid `status` (400–599) is found, log `upstream_api_error` with the structured payload and set `res.locals.upstreamError`.
 - `errorResponder` checks `res.locals.upstreamError` before falling back to 500 and responds 502 with the structured provider payload.
+- Add `DomainError` handling before upstream detection:
+  - In `errorEventLogger`: log `domain_error` at warn with `{ code, status, details, context }`, then `next(err)`.
+  - In `errorResponder`: if `details.retryAfterSecs` exists, set `Retry-After`; respond with 422 and `{ error: "Domain error", code, message, details?, requestId }`.
 
 ## Enforcement
 
