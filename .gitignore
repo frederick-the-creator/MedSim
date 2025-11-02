@@ -8,3 +8,5 @@ vite.config.ts.*
 certs/*
 testLogs/
 test-logs.ndjson
+railway_logs/
+railway_logs_staging/
