@@ -1,6 +1,6 @@
 import type { Assessment } from "@shared/schemas/assessment";
-import { DIMENSION_KEYS } from "@shared/schemas/assessment";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { dimensionKeys } from "@shared/schemas/assessment";
+
 import {
 	Accordion,
 	AccordionContent,
@@ -15,7 +15,7 @@ type Props = {
 
 export default function AssessmentCard({ assessment }: Props) {
 	if (!assessment) return null;
-	const dims = DIMENSION_KEYS.map((k) => assessment.dimensions[k]);
+	const dims = dimensionKeys.map((k) => assessment.dimensions[k]); // Use of dimensionKeys enforces order
 	const hasInsufficient = dims.some((d) => d.insufficient_evidence);
 	const hasRedFlags = dims.some((d) => Array.isArray(d.red_flags) && d.red_flags.length > 0);
 

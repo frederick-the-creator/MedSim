@@ -1,10 +1,13 @@
-import { Assessment, DIMENSION_KEYS } from "@shared/schemas/assessment";
-import type { DimensionKey } from "@shared/schemas/assessment";
+import {
+	Assessment,
+	DimensionKey,
+	dimensionKeys,
+} from "@shared/schemas/assessment";
 import { isAssessment } from "@server/shared/utils/validation";
 
-type UnknownRecord = Record<string, unknown>;
+type UnknownRecord = Record<string, unknown>; // Object with string keys and values of unknown type
 
-const KEY_TO_CANONICAL_NAME: Record<(typeof DIMENSION_KEYS)[number], string> = {
+const KEY_TO_CANONICAL_NAME: Record<DimensionKey, string> = {
 	rapport_introduction_structure_flow:
 		"Rapport, introduction, structure and flow",
 	empathy_listening_patient_perspective:
@@ -14,14 +17,15 @@ const KEY_TO_CANONICAL_NAME: Record<(typeof DIMENSION_KEYS)[number], string> = {
 	appropriate_pace: "Appropriate pace",
 };
 
-const NAME_TO_KEY: Record<string, (typeof DIMENSION_KEYS)[number]> =
-	Object.entries(KEY_TO_CANONICAL_NAME).reduce(
-		(acc, [k, v]) => {
-			acc[v] = k as (typeof DIMENSION_KEYS)[number];
-			return acc;
-		},
-		{} as Record<string, (typeof DIMENSION_KEYS)[number]>,
-	);
+const NAME_TO_KEY: Record<string, DimensionKey> = Object.entries(
+	KEY_TO_CANONICAL_NAME,
+).reduce(
+	(acc, [k, v]) => {
+		acc[v] = k as DimensionKey;
+		return acc;
+	},
+	{} as Record<string, DimensionKey>,
+);
 
 function coerceString(value: unknown, fallback = ""): string {
 	return typeof value === "string" ? value : fallback;
@@ -83,7 +87,7 @@ function normalizePoints(
 	return items;
 }
 
-function emptyDimensionForKey(key: (typeof DIMENSION_KEYS)[number]) {
+function emptyDimensionForKey(key: DimensionKey) {
 	return {
 		name: KEY_TO_CANONICAL_NAME[key],
 		points: [] as { type: "strength" | "improvement"; text: string }[],
@@ -116,10 +120,9 @@ export function normalizeAssessment(raw: unknown): Assessment | null {
 
 	let dimsRaw = (root as any).dimensions as unknown;
 
-	// Accept array form and convert by mapping names → keys
+	//  If.... Convert by mapping dimension names → dimension keys
 	if (Array.isArray(dimsRaw)) {
-		const tmp: Partial<Record<(typeof DIMENSION_KEYS)[number], UnknownRecord>> =
-			{};
+		const tmp: Partial<Record<DimensionKey, UnknownRecord>> = {};
 		for (const d of dimsRaw) {
 			if (typeof d !== "object" || d === null) continue;
 			const name = (d as any).name as unknown;
@@ -131,7 +134,7 @@ export function normalizeAssessment(raw: unknown): Assessment | null {
 		dimsRaw = tmp as UnknownRecord;
 	}
 
-	// Accept object keyed by display names and remap → canonical underscore keys
+	// If.... Convert by mapping dimension names → dimension keys
 	if (
 		!Array.isArray(dimsRaw) &&
 		typeof dimsRaw === "object" &&
@@ -140,9 +143,7 @@ export function normalizeAssessment(raw: unknown): Assessment | null {
 		const entries = Object.entries(dimsRaw as Record<string, unknown>);
 		const hasDisplayNameKeys = entries.some(([k]) => !!NAME_TO_KEY[k]);
 		if (hasDisplayNameKeys) {
-			const tmp: Partial<
-				Record<(typeof DIMENSION_KEYS)[number], UnknownRecord>
-			> = {};
+			const tmp: Partial<Record<DimensionKey, UnknownRecord>> = {};
 			for (const [name, val] of entries) {
 				const key = NAME_TO_KEY[name];
 				if (!key) continue;
@@ -161,7 +162,7 @@ export function normalizeAssessment(raw: unknown): Assessment | null {
 			: {};
 
 	const normalizedDims = {} as Assessment["dimensions"];
-	for (const key of DIMENSION_KEYS) {
+	for (const key of dimensionKeys) {
 		(normalizedDims as any)[key] = normalizeDimension(dimsObj[key], key);
 	}
 

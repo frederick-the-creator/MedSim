@@ -2,8 +2,9 @@ import { z } from "zod";
 import { medicalCaseSchema } from "@shared/schemas/case";
 import { coachRequestSchema } from "@shared/schemas/coach";
 import type { Assessment } from "@shared/schemas/assessment";
-import { DIMENSION_KEYS } from "@shared/schemas/assessment";
+import { dimensionNames, dimensionKeys } from "@shared/schemas/assessment";
 
+// Zod Validation for assessment route
 export const assessmentRequestSchema = z.object({
 	conversationId: z.string().min(1),
 	medicalCase: medicalCaseSchema,
@@ -17,11 +18,14 @@ export function parseAssessmentRequestBody(
 	return assessmentRequestSchema.parse(body);
 }
 
+// Zod validation for coach route
 export type CoachRequestBody = z.infer<typeof coachRequestSchema>;
 
 export function parseCoachRequestBody(body: unknown): CoachRequestBody {
 	return coachRequestSchema.parse(body);
 }
+
+// Type guard for assessment object returned by Gemini
 
 function isNonNullObject(value: unknown): value is Record<string, unknown> {
 	return typeof value === "object" && value !== null;
@@ -38,14 +42,6 @@ function isPointsArray(value: unknown): boolean {
 	);
 }
 
-const DIMENSION_NAMES: readonly string[] = [
-	"Rapport, introduction, structure and flow",
-	"Empathy, listening and patient perspective",
-	"Medical explanation and plan",
-	"Honesty and transparency",
-	"Appropriate pace",
-];
-
 function isDimension(value: unknown): boolean {
 	if (!isNonNullObject(value)) return false;
 	const name = (value as any).name;
@@ -54,7 +50,7 @@ function isDimension(value: unknown): boolean {
 	const redFlags = (value as any).red_flags;
 	return (
 		typeof name === "string" &&
-		DIMENSION_NAMES.includes(name) &&
+		dimensionNames.includes(name as any) &&
 		isPointsArray(points) &&
 		typeof insufficient === "boolean" &&
 		Array.isArray(redFlags) &&
@@ -68,11 +64,11 @@ export function isAssessment(value: unknown): value is Assessment {
 	const summary = (value as any).summary;
 	if (!isNonNullObject(dims)) return false;
 	const dimKeys = Object.keys(dims);
-	if (dimKeys.length !== DIMENSION_KEYS.length) return false;
-	for (const key of DIMENSION_KEYS) {
+	if (dimKeys.length !== dimensionKeys.length) return false;
+	for (const key of dimensionKeys) {
 		if (!Object.prototype.hasOwnProperty.call(dims, key)) return false;
 	}
-	const dimsOk = DIMENSION_KEYS.every((k) => isDimension((dims as any)[k]));
+	const dimsOk = dimensionKeys.every((k) => isDimension((dims as any)[k]));
 	const summaryOk =
 		isNonNullObject(summary) &&
 		typeof (summary as any).free_text === "string" &&
