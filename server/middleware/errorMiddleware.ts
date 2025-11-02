@@ -80,6 +80,63 @@ export function errorEventLogger(
 		return;
 	}
 
+	// --------- GENERIC UPSTREAM (e.g., fetch/HTTP libraries) -----------
+
+	// Try to detect upstream provider + status without wrapping errors
+	if (err && typeof err === "object") {
+		const anyErr = err as any;
+		const name: string = anyErr.name || "Error";
+		const rawMessage: string =
+			typeof anyErr.message === "string"
+				? anyErr.message
+				: String(anyErr.message ?? "");
+		const statusFromFields: number | undefined =
+			typeof anyErr.status === "number"
+				? anyErr.status
+				: typeof anyErr.cause?.status === "number"
+					? anyErr.cause.status
+					: undefined;
+
+		// Message pattern: "<Provider> error <status>: <statusText>"
+		const msgMatch =
+			typeof rawMessage === "string"
+				? /^([A-Za-z][\w -]+) error (\d{3}):/.exec(rawMessage)
+				: null;
+		const statusFromMsg = msgMatch ? Number(msgMatch[2]) : undefined;
+		const providerFromMsg = msgMatch
+			? msgMatch[1]?.toLowerCase().replace(/\s+/g, "-")
+			: undefined;
+		const status: number | undefined = statusFromFields ?? statusFromMsg;
+
+		if (typeof status === "number" && status >= 400 && status <= 599) {
+			const provider =
+				providerFromMsg || (res as any).locals?.context?.provider || "upstream";
+			const stackLines = anyErr.stack
+				? String(anyErr.stack)
+						.split("\n")
+						.map((l: string) => l.trim())
+				: [];
+			const payload = {
+				provider,
+				name,
+				status,
+				message: rawMessage,
+				stack: stackLines,
+				context: (res as any).locals?.context ?? undefined,
+			};
+			req.log.error(payload, "upstream_api_error");
+			(res as any).locals = (res as any).locals || {};
+			(res as any).locals.upstreamError = {
+				provider,
+				name,
+				status,
+				message: rawMessage,
+			};
+			next(err);
+			return;
+		}
+	}
+
 	const ser =
 		err instanceof Error
 			? { name: err.name, message: err.message, stack: err.stack }
@@ -117,6 +174,22 @@ export function errorResponder(
 			name,
 			status,
 			message,
+			reqId,
+		});
+		return;
+	}
+
+	// If a generic upstream error was detected in errorEventLogger, respond as 502
+	const upstream = (res as any).locals?.upstreamError as
+		| { provider: string; name: string; status: number; message: string }
+		| undefined;
+	if (upstream) {
+		res.status(502).json({
+			error: "Upstream API error",
+			provider: upstream.provider,
+			name: upstream.name,
+			status: upstream.status,
+			message: upstream.message,
 			reqId,
 		});
 		return;

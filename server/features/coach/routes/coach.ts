@@ -7,7 +7,7 @@ export async function coachRoute(
 	res: Response,
 	next: NextFunction,
 ): Promise<void> {
-	res.locals.context = "coach.stream";
+	res.locals.context = { op: "coach.stream" };
 	const body = parseCoachRequestBody(req.body);
 
 	const apiKey = process.env.GEMINI_API_KEY;

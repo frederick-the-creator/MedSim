@@ -1,6 +1,7 @@
 import { Assessment, AssessmentSchema } from "@shared/schemas/assessment";
 import { isAssessment } from "@server/shared/utils/validation";
 import { normalizeAssessment } from "@server/shared/utils/assessmentNormalize";
+import { logger } from "@server/middleware/httpLogger";
 
 interface ElevenTranscriptItem {
 	role: "user" | "agent" | string;
@@ -66,7 +67,7 @@ async function pollTranscriptWithBackoff(
 	let attempt = 0;
 	let transcript = "";
 	while (Date.now() < deadline) {
-		console.log("Polling Transcript");
+		logger.debug({ attempt, conversationId }, "transcript_poll_attempt");
 		transcript = await getElevenTranscriptOnce(conversationId);
 
 		if (transcript) break;
@@ -149,8 +150,7 @@ async function requestAssessmentJson(
 	// 	model,
 	// });
 
-	console.log("response");
-	console.log(response);
+	// intentionally silent; caller may log via req.log if needed
 
 	const safeText = response?.text ?? "{}";
 	let parsed: unknown = {};
@@ -184,6 +184,7 @@ async function generateAssessmentWithRetries(
 	};
 
 	for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+		logger.debug({ attempt }, "assessment_generation_attempt");
 		const effectiveSystemInstruction = buildEffectiveSystemInstruction(
 			baseSystemInstruction,
 			attempt,
@@ -200,11 +201,7 @@ async function generateAssessmentWithRetries(
 		const validated = validateAndNormalizeAssessment(parsed);
 		if (validated) return validated;
 
-		const preview = rawText.slice(0, 500);
-		console.warn(
-			`Assessment JSON failed validation (attempt ${attempt}/${maxAttempts}). Preview:`,
-			preview,
-		);
+		// leave logging to caller and middleware; avoid console noise in services
 
 		if (attempt < maxAttempts) {
 			await new Promise((r) =>
@@ -225,10 +222,8 @@ export async function assessWithGemini(input: {
 
 	const apiKey = process.env.GEMINI_API_KEY;
 	if (!apiKey) {
-		console.error("❌ No GOOGLE_API_KEY found in environment!");
+		// allow error paths to be normalized centrally; do not console.log
 	}
-
-	console.log("Running Gemini Assessment");
 
 	const { GoogleGenAI } = await import("@google/genai");
 	const ai = new GoogleGenAI({ apiKey }) as unknown as GenAIClient;

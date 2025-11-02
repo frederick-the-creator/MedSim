@@ -13,7 +13,7 @@ export async function assessmentRoute(
 	res: Response,
 	next: NextFunction,
 ): Promise<void> {
-	res.locals.context = "assessment.generate";
+	res.locals.context = { op: "assessment.generate" };
 	const { conversationId, medicalCase } = parseAssessmentRequestBody(req.body);
 
 	const transcript = await fetchTranscriptFromElevenLabs(conversationId);
@@ -28,8 +28,8 @@ export async function assessmentRoute(
 
 	// console.log("transcript");
 	// console.log(transcript);
-	console.log("Transcript successfully retrieved");
-
+	// route-level logs should use req.log if needed; suppress console noise
+	logger.info("Transcript successfully retrieved");
 	const medicalCaseString = JSON.stringify(medicalCase);
 	const systemInstruction = assessmentSystem;
 	const assessment = await assessWithGemini({
@@ -40,15 +40,15 @@ export async function assessmentRoute(
 
 	// console.log("assessment");
 	// console.log(assessment);
-	console.log("Assessment successfully retrieved");
+	// route-level logs should use req.log if needed; suppress console noise
 
 	if (!assessment || !isAssessment(assessment)) {
 		res.status(502).json({ message: "Assessment generation failed" });
 		return;
 	}
 
-	console.log("Assessment successfully retrieved");
-
+	// route-level logs should use req.log if needed; suppress console noise
+	logger.info("Assessment successfully retrieved");
 	res.json({ transcript, assessment });
 	return;
 }

@@ -1,0 +1,22 @@
+{
+  "root": true,
+  "env": {
+    "es2022": true,
+    "node": true
+  },
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "sourceType": "module",
+    "project": false
+  },
+  "plugins": ["@typescript-eslint"],
+  "extends": [],
+  "rules": {
+    "no-console": "error",
+    "@typescript-eslint/no-throw-literal": "error"
+  },
+  "ignorePatterns": [
+    "dist/**",
+    "node_modules/**"
+  ]
+}

@@ -2,10 +2,87 @@
 alwaysApply: true
 ---
 
-# Error Handling Rules
+# Error Handling + Logging Standard (Pino, Express 5)
 
-- Use Express 5 async propagation; avoid try/catch in routes/services unless strictly required.
-- Normalize all upstream API errors in server/middleware/errorMiddleware.ts.
-- When calling Google GenAI (Gemini), do not catch; let errors bubble, log provider/code/status/message in middleware.
-- Set res.locals.context in routes (e.g., "assessment.generate", "coach.stream") for structured logging.
-- Do not leak secrets in logs or responses; prefer 502 for upstream failures.
+## Goals
+
+- Consistent outcomes: correct HTTP status, safe response body, rich structured logs.
+- Zero console noise; only structured logs via Pino.
+- Minimal try/catch; let middleware produce both event and summary logs.
+
+## Golden Rules
+
+- Do not use `console.*` in app code. Use `req.log` in routes; services stay silent unless passed a logger.
+- Avoid try/catch in routes/services unless strictly necessary. Let exceptions bubble to the central middleware.
+- Set `res.locals.context` in each route with an operation key and lightweight identifiers (e.g., `{ op: "assessment.generate", conversationId }`).
+- Never log secrets or large payloads. Prefer 502 for upstream failures.
+- Do not wrap upstream/provider errors; let them bubble.
+
+## Middleware Order
+
+1. `httpLogger` (pino-http) and `startTimer`
+2. Routes
+3. `errorEventLogger` (domain event log)
+4. `errorResponder` (HTTP response + summary log)
+
+## Correlation & Request IDs
+
+- `httpLogger` attaches a `req.id` and sets `x-request-id` response header.
+- Use `req.log` for all logs; it is bound to the request id.
+
+## Route Requirements
+
+- Parse/validate input with Zod. On `ZodError`, do not catch; middleware logs and responds 400.
+- Immediately set `res.locals.context` with a concise operation descriptor and identifiers:
+  - Minimal shape: `{ op: "feature.operation", ...ids }`
+  - Examples: `{ op: "assessment.generate", conversationId, model: "gemini-2.5-pro" }`, `{ op: "coach.stream", sessionId }`
+- Call services and return results. Only catch to add context and rethrow; otherwise bubble.
+
+## Service Rules
+
+- Services are pure and framework-agnostic; do not import Express types.
+- Throw `Error` (or the library's error type). Do not throw non-Error values.
+- If logging is needed, accept an injected logger (e.g., `logger?: Logger`) from the route (child of `req.log`).
+
+## Error Types and Mapping
+
+- Zod: bubble `ZodError` → middleware logs `{ issues }` at warn → respond 400 `{ error, issues, requestId }`.
+- Google GenAI (`ApiError`): bubble → middleware logs `{ provider: "google-genai", name, status, message(json), stack, context }` at error → respond 502 with provider metadata.
+- Other upstreams (e.g., ElevenLabs): do not wrap; bubble. Middleware normalizes generic upstream failures to 502 when provider/status is detectable via:
+  - `err.status` (number) or `err.cause?.status` in 400–599, and/or
+  - message pattern `"<Provider> error <status>: <statusText>"` (e.g., `"ElevenLabs error 429: Too Many Requests"`), and/or
+  - `res.locals.context?.provider` if set by the route.
+    The middleware logs `{ provider, name, status, message(parsed), stack, context }` at error and responds 502.
+- Unknown errors: bubble → middleware logs `{ name, message, stack }` at error → respond 500 `{ error, requestId }`.
+
+## Logging Levels
+
+- Summary logs (transport): controlled by `customLogLevel` in `httpLogger` (silent for 2xx/3xx, warn for 4xx, error for 5xx or thrown error).
+- Event logs (domain):
+  - `info` for notable milestones (keep payloads small)
+  - `warn` for client mistakes/validation issues
+  - `error` for upstream/internal failures
+
+## Sensitive Data Hygiene
+
+- Never log API keys, auth tokens, secrets, or full PII.
+- For large texts (e.g., `transcript`, `medicalCase`), log metadata only: lengths, ids, or a short preview when absolutely necessary.
+
+## Response Policy
+
+- 400: validation problems (Zod); include `issues` and `requestId`.
+- 502: upstream API failures; include `provider`, `name`, `status`, `message` (as provided), and `reqId`.
+- 500: everything else; include `requestId` only.
+
+## Middleware Implementation Notes
+
+- `errorEventLogger` keeps existing Zod and Google GenAI branches. Add a generic upstream detector:
+  - Extract `status` from `err.status`/`err.cause?.status` or via regex `/^([A-Za-z][\w -]+) error (\d{3}):/` on `err.message`.
+  - Infer `provider` from the regex group or `res.locals.context?.provider`.
+  - If a valid `status` (400–599) is found, log `upstream_api_error` with the structured payload and set `res.locals.upstreamError`.
+- `errorResponder` checks `res.locals.upstreamError` before falling back to 500 and responds 502 with the structured provider payload.
+
+## Enforcement
+
+- ESLint: enable `no-console` and `@typescript-eslint/no-throw-literal`.
+- Optional: guard against route-level `try/catch` via `no-restricted-syntax` if needed.
