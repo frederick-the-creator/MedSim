@@ -1,4 +1,5 @@
 import type { Assessment } from "@shared/schemas/assessment";
+import { dimensionKeyToName } from "@shared/schemas/assessment";
 import { dimensionKeys } from "@shared/schemas/assessment";
 
 import {
@@ -52,49 +53,49 @@ export default function AssessmentCard({ assessment }: Props) {
 
 				{/* Dimensions */}
 				<Accordion type="single" collapsible className="w-full">
-					{dims.map((d, i) => (
-						<AccordionItem key={i} value={`dim-${i}`}>
-							<AccordionTrigger>
-								<div className="flex items-center justify-between w-full">
-									<div className="text-left">
-										<div className="font-medium">{d.name}</div>
+					{dimensionKeys.map((k, i) => (
+							<AccordionItem key={i} value={`dim-${i}`}>
+								<AccordionTrigger>
+									<div className="flex items-center justify-between w-full">
+										<div className="text-left">
+											<div className="font-medium">{dimensionKeyToName[k]}</div>
+										</div>
+										<div className="flex gap-2">
+											{assessment.dimensions[k].insufficient_evidence && (
+												<Badge variant="destructive">Insufficient evidence</Badge>
+											)}
+											{Array.isArray(assessment.dimensions[k].red_flags) && assessment.dimensions[k].red_flags.length > 0 && (
+												<Badge variant="destructive">Red flags</Badge>
+											)}
+										</div>
 									</div>
-									<div className="flex gap-2">
-										{d.insufficient_evidence && (
-											<Badge variant="destructive">Insufficient evidence</Badge>
-										)}
-										{Array.isArray(d.red_flags) && d.red_flags.length > 0 && (
-											<Badge variant="destructive">Red flags</Badge>
-										)}
+								</AccordionTrigger>
+								<AccordionContent>
+									<div className="grid md:grid-cols-2 gap-4 pt-2">
+										<div>
+											<div className="font-medium text-sm mb-1">Strengths</div>
+											<ul className="list-disc pl-5 text-sm">
+												{(assessment.dimensions[k].points ?? [])
+													.filter((p) => p.strength_improvement === "strength")
+													.map((p, j) => (
+														<li key={j}>{p.detail}</li>
+													))}
+											</ul>
+										</div>
+										<div>
+											<div className="font-medium text-sm mb-1">Improvements</div>
+											<ul className="list-disc pl-5 text-sm">
+												{(assessment.dimensions[k].points ?? [])
+													.filter((p) => p.strength_improvement === "improvement")
+													.map((p, j) => (
+														<li key={j}>{p.detail}</li>
+													))}
+											</ul>
+										</div>
 									</div>
-								</div>
-							</AccordionTrigger>
-							<AccordionContent>
-								<div className="grid md:grid-cols-2 gap-4 pt-2">
-									<div>
-										<div className="font-medium text-sm mb-1">Strengths</div>
-										<ul className="list-disc pl-5 text-sm">
-											{(d.points ?? [])
-												.filter((p) => p.type === "strength")
-												.map((p, j) => (
-													<li key={j}>{p.text}</li>
-												))}
-										</ul>
-									</div>
-									<div>
-										<div className="font-medium text-sm mb-1">Improvements</div>
-										<ul className="list-disc pl-5 text-sm">
-											{(d.points ?? [])
-												.filter((p) => p.type === "improvement")
-												.map((p, j) => (
-													<li key={j}>{p.text}</li>
-												))}
-										</ul>
-									</div>
-								</div>
-							</AccordionContent>
-						</AccordionItem>
-					))}
+								</AccordionContent>
+							</AccordionItem>
+						))}
 				</Accordion>
 			</div>
 		</div>

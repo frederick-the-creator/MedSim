@@ -53,13 +53,12 @@ type DimensionName = (typeof dimensionNames)[number];
 type PointType = "strength" | "improvement";
 
 interface Point {
-	type: PointType;
-	text: string; // should include direct quotes from the transcript
+	strength_improvement: PointType;
+	detail: string; // should include direct quotes from the transcript
 }
 
 // 3) Single dimension (purely qualitative)
 interface Dimension {
-	name: DimensionName;
 	points: Point[]; // 0–3 items, each is strength or improvement
 	insufficient_evidence: boolean;
 	red_flags: string[]; // e.g. unsafe advice, misinformation, etc.
@@ -74,19 +73,11 @@ interface Dimension {
 
 export interface Assessment {
 	dimensions: {
-		rapport_introduction_structure_flow: Dimension & {
-			name: "Rapport, introduction, structure and flow";
-		};
-		empathy_listening_patient_perspective: Dimension & {
-			name: "Empathy, listening and patient perspective";
-		};
-		medical_explanation_and_plan: Dimension & {
-			name: "Medical explanation and plan";
-		};
-		honesty_and_transparency: Dimension & {
-			name: "Honesty and transparency";
-		};
-		appropriate_pace: Dimension & { name: "Appropriate pace" };
+		rapport_introduction_structure_flow: Dimension;
+		empathy_listening_patient_perspective: Dimension;
+		medical_explanation_and_plan: Dimension;
+		honesty_and_transparency: Dimension;
+		appropriate_pace: Dimension;
 	};
 	summary: {
 		free_text: string; // holistic reflection integrating key points
@@ -95,6 +86,119 @@ export interface Assessment {
 }
 
 // --- Assessment Schema as JSON Schema
+
+// export const AssessmentSchema = {
+// 	$id: "AssessmentSchema", // Gives the schema a unique name. Allows other JSON schema's to reference this one using $ref (e.g. { "$ref": "AssessmentSchema#/defs/Point" }). Even if schema is shared or serialised via API this reference is still valid
+// 	type: "object", // Root ovalue must be JSON object
+// 	additionalProperties: false, // No extra fields allowed beyond those explicitly defined
+// 	$defs: {
+// 		// Defines re-usable sub-schemas to be referenced elsewhere
+// 		Point: {
+// 			type: "object",
+// 			additionalProperties: false,
+// 			properties: {
+// 				strenght_improvement: {
+// 					type: "string",
+// 					enum: ["strength", "improvement"],
+// 				},
+// 				detail: { type: "string" },
+// 			},
+// 			required: ["strenght_improvement", "detail"], // Both type and text properties must be present
+// 		},
+// 		Dimension: {
+// 			type: "object",
+// 			additionalProperties: false,
+// 			properties: {
+// 				// keep name if you want it echoed back; otherwise drop it to simplify further
+// 				name: { type: "string" },
+// 				points: {
+// 					// Array of objects
+// 					type: "array",
+// 					minItems: 0,
+// 					maxItems: 3,
+// 					items: { $ref: "#/$defs/Point" }, // points is an array of items where each item is a point object
+// 				},
+// 				insufficient_evidence: { type: "boolean" },
+// 				red_flags: { type: "array", items: { type: "string" } },
+// 			},
+// 			required: ["name", "points", "insufficient_evidence", "red_flags"], // All properties are required
+// 		},
+// 	},
+// 	properties: {
+// 		// Defines the properties we expect from this schema
+// 		// Only expecting two properties, dimensions & summary
+// 		dimensions: {
+// 			type: "object",
+// 			additionalProperties: false,
+// 			properties: {
+// 				// Dimensions property expects 5 sub properties, one for each of the predetermined dimensions
+// 				rapport_introduction_structure_flow: {
+// 					allOf: [
+// 						// Property must satisfy each of these schema constraints
+// 						{ $ref: "#/$defs/Dimension" }, // Must be of the re-usable Dimension schema
+// 						{
+// 							properties: {
+// 								name: { enum: ["Rapport, introduction, structure and flow"] }, // Reusable dimension schema must have name set to this value
+// 							},
+// 						},
+// 					],
+// 				},
+// 				empathy_listening_patient_perspective: {
+// 					allOf: [
+// 						{ $ref: "#/$defs/Dimension" },
+// 						{
+// 							properties: {
+// 								name: { enum: ["Empathy, listening and patient perspective"] },
+// 							},
+// 						},
+// 					],
+// 				},
+// 				medical_explanation_and_plan: {
+// 					allOf: [
+// 						{ $ref: "#/$defs/Dimension" },
+// 						{
+// 							properties: { name: { enum: ["Medical explanation and plan"] } },
+// 						},
+// 					],
+// 				},
+// 				honesty_and_transparency: {
+// 					allOf: [
+// 						{ $ref: "#/$defs/Dimension" },
+// 						{ properties: { name: { enum: ["Honesty and transparency"] } } },
+// 					],
+// 				},
+// 				appropriate_pace: {
+// 					allOf: [
+// 						{ $ref: "#/$defs/Dimension" },
+// 						{ properties: { name: { enum: ["Appropriate pace"] } } },
+// 					],
+// 				},
+// 			},
+// 			required: [
+// 				"rapport_introduction_structure_flow",
+// 				"empathy_listening_patient_perspective",
+// 				"medical_explanation_and_plan",
+// 				"honesty_and_transparency",
+// 				"appropriate_pace",
+// 			],
+// 		},
+// 		summary: {
+// 			type: "object",
+// 			additionalProperties: false,
+// 			properties: {
+// 				free_text: { type: "string" },
+// 				bullet_points: {
+// 					type: "array",
+// 					minItems: 0,
+// 					maxItems: 3,
+// 					items: { type: "string" },
+// 				},
+// 			},
+// 			required: ["free_text", "bullet_points"],
+// 		},
+// 	},
+// 	required: ["dimensions", "summary"],
+// } as const;
 
 export const AssessmentSchema = {
 	$id: "AssessmentSchema", // Gives the schema a unique name. Allows other JSON schema's to reference this one using $ref (e.g. { "$ref": "AssessmentSchema#/defs/Point" }). Even if schema is shared or serialised via API this reference is still valid
@@ -106,17 +210,18 @@ export const AssessmentSchema = {
 			type: "object",
 			additionalProperties: false,
 			properties: {
-				type: { type: "string", enum: ["strength", "improvement"] },
-				text: { type: "string" }, // (avoid pattern; not reliably supported)
+				strength_improvement: {
+					type: "string",
+					enum: ["strength", "improvement"],
+				},
+				detail: { type: "string" },
 			},
-			required: ["type", "text"], // Both type and text properties must be present
+			required: ["strength_improvement", "detail"], // Both type and text properties must be present
 		},
-		Dimension: {
+		Dimension_rapport_introduction_structure_flow: {
 			type: "object",
 			additionalProperties: false,
 			properties: {
-				// keep name if you want it echoed back; otherwise drop it to simplify further
-				name: { type: "string" },
 				points: {
 					// Array of objects
 					type: "array",
@@ -127,7 +232,71 @@ export const AssessmentSchema = {
 				insufficient_evidence: { type: "boolean" },
 				red_flags: { type: "array", items: { type: "string" } },
 			},
-			required: ["name", "points", "insufficient_evidence", "red_flags"], // All properties are required
+			required: ["points", "insufficient_evidence", "red_flags"], // All properties are required
+		},
+		Dimension_empathy_listening_patient_perspective: {
+			type: "object",
+			additionalProperties: false,
+			properties: {
+				points: {
+					// Array of objects
+					type: "array",
+					minItems: 0,
+					maxItems: 3,
+					items: { $ref: "#/$defs/Point" }, // points is an array of items where each item is a point object
+				},
+				insufficient_evidence: { type: "boolean" },
+				red_flags: { type: "array", items: { type: "string" } },
+			},
+			required: ["points", "insufficient_evidence", "red_flags"], // All properties are required
+		},
+		Dimension_medical_explanation_and_plan: {
+			type: "object",
+			additionalProperties: false,
+			properties: {
+				points: {
+					// Array of objects
+					type: "array",
+					minItems: 0,
+					maxItems: 3,
+					items: { $ref: "#/$defs/Point" }, // points is an array of items where each item is a point object
+				},
+				insufficient_evidence: { type: "boolean" },
+				red_flags: { type: "array", items: { type: "string" } },
+			},
+			required: ["points", "insufficient_evidence", "red_flags"], // All properties are required
+		},
+		Dimension_honesty_and_transparency: {
+			type: "object",
+			additionalProperties: false,
+			properties: {
+				points: {
+					// Array of objects
+					type: "array",
+					minItems: 0,
+					maxItems: 3,
+					items: { $ref: "#/$defs/Point" }, // points is an array of items where each item is a point object
+				},
+				insufficient_evidence: { type: "boolean" },
+				red_flags: { type: "array", items: { type: "string" } },
+			},
+			required: ["points", "insufficient_evidence", "red_flags"], // All properties are required
+		},
+		Dimension_appropriate_pace: {
+			type: "object",
+			additionalProperties: false,
+			properties: {
+				points: {
+					// Array of objects
+					type: "array",
+					minItems: 0,
+					maxItems: 3,
+					items: { $ref: "#/$defs/Point" }, // points is an array of items where each item is a point object
+				},
+				insufficient_evidence: { type: "boolean" },
+				red_flags: { type: "array", items: { type: "string" } },
+			},
+			required: ["points", "insufficient_evidence", "red_flags"], // All properties are required
 		},
 	},
 	properties: {
@@ -139,46 +308,18 @@ export const AssessmentSchema = {
 			properties: {
 				// Dimensions property expects 5 sub properties, one for each of the predetermined dimensions
 				rapport_introduction_structure_flow: {
-					allOf: [
-						// Property must satisfy each of these schema constraints
-						{ $ref: "#/$defs/Dimension" }, // Must be of the re-usable Dimension schema
-						{
-							properties: {
-								name: { enum: ["Rapport, introduction, structure and flow"] }, // Reusable dimension schema must have name set to this value
-							},
-						},
-					],
+					$ref: "#/$defs/Dimension_rapport_introduction_structure_flow",
 				},
 				empathy_listening_patient_perspective: {
-					allOf: [
-						{ $ref: "#/$defs/Dimension" },
-						{
-							properties: {
-								name: { enum: ["Empathy, listening and patient perspective"] },
-							},
-						},
-					],
+					$ref: "#/$defs/Dimension_empathy_listening_patient_perspective",
 				},
 				medical_explanation_and_plan: {
-					allOf: [
-						{ $ref: "#/$defs/Dimension" },
-						{
-							properties: { name: { enum: ["Medical explanation and plan"] } },
-						},
-					],
+					$ref: "#/$defs/Dimension_medical_explanation_and_plan",
 				},
 				honesty_and_transparency: {
-					allOf: [
-						{ $ref: "#/$defs/Dimension" },
-						{ properties: { name: { enum: ["Honesty and transparency"] } } },
-					],
+					$ref: "#/$defs/Dimension_honesty_and_transparency",
 				},
-				appropriate_pace: {
-					allOf: [
-						{ $ref: "#/$defs/Dimension" },
-						{ properties: { name: { enum: ["Appropriate pace"] } } },
-					],
-				},
+				appropriate_pace: { $ref: "#/$defs/Dimension_appropriate_pace" },
 			},
 			required: [
 				"rapport_introduction_structure_flow",
@@ -205,3 +346,13 @@ export const AssessmentSchema = {
 	},
 	required: ["dimensions", "summary"],
 } as const;
+
+export const dimensionKeyToName: Record<DimensionKey, string> = {
+	rapport_introduction_structure_flow:
+		"Rapport, introduction, structure and flow",
+	empathy_listening_patient_perspective:
+		"Empathy, listening and patient perspective",
+	medical_explanation_and_plan: "Medical explanation and plan",
+	honesty_and_transparency: "Honesty and transparency",
+	appropriate_pace: "Appropriate pace",
+};

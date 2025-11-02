@@ -100,64 +100,61 @@ export function useAssessmentMock(): UseAssessmentResult {
 				const mockAssessment: Assessment = {
 					dimensions: {
 						rapport_introduction_structure_flow: {
-							name: "Rapport, introduction, structure and flow",
 							points: [
 								{
-									type: "strength",
-									text: `"Hello, I'm..." established a clear introduction and role.`,
+									strength_improvement: "strength",
+									detail: `"Hello, I'm..." established a clear introduction and role.`,
 								},
 								{
-									type: "strength",
-									text: `You signposted: "Next, I'll explain..." which aided structure.`,
+									strength_improvement: "strength",
+									detail: `You signposted: "Next, I'll explain..." which aided structure.`,
 								},
 								{
-									type: "improvement",
-									text: `Consider a brief closing summary: "To recap, we'll..."`,
+									strength_improvement: "improvement",
+									detail: `Consider a brief closing summary: "To recap, we'll..."`,
 								},
 							],
 							insufficient_evidence: false,
 							red_flags: [],
 						},
 						empathy_listening_patient_perspective: {
-							name: "Empathy, listening and patient perspective",
 							points: [
 								{
-									type: "strength",
-									text: `Validated emotion: "I can see this is worrying for you."`,
+									strength_improvement: "strength",
+									detail: `Validated emotion: "I can see this is worrying for you."`,
 								},
 								{
-									type: "improvement",
-									text: `When patient said "I'm scared about my sight", explicitly reflect and explore this fear.`,
+									strength_improvement: "improvement",
+									detail: `When patient said "I'm scared about my sight", explicitly reflect and explore this fear.`,
 								},
 							],
 							insufficient_evidence: false,
 							red_flags: [],
 						},
 						medical_explanation_and_plan: {
-							name: "Medical explanation and plan",
 							points: [
 								{
-									type: "strength",
-									text: `Gave clear plan: "We'll start hourly antibiotic drops."`,
+									strength_improvement: "strength",
+									detail: `Gave clear plan: "We'll start hourly antibiotic drops."`,
 								},
 								{
-									type: "strength",
-									text: `Included safety-netting: "If symptoms worsen, please return to A&E."`,
+									strength_improvement: "strength",
+									detail: `Included safety-netting: "If symptoms worsen, please return to A&E."`,
 								},
 								{
-									type: "improvement",
-									text: "Reduce jargon; chunk-and-check understanding after key points.",
+									strength_improvement: "improvement",
+									detail:
+										"Reduce jargon; chunk-and-check understanding after key points.",
 								},
 							],
 							insufficient_evidence: false,
 							red_flags: [],
 						},
 						honesty_and_transparency: {
-							name: "Honesty and transparency",
 							points: [
 								{
-									type: "strength",
-									text: `Acknowledged limits: "I'll discuss with my consultant."`,
+									strength_improvement: "strength",
+									detail: `Acknowledged limits: "I'll discuss with my consultant."`,
 								},
 							],
 							insufficient_evidence: false,
@@ -165,15 +162,15 @@ export function useAssessmentMock(): UseAssessmentResult {
 						},
 
 						appropriate_pace: {
-							name: "Appropriate pace",
 							points: [
 								{
-									type: "strength",
-									text: "Balanced pace overall; allowed patient to speak without interruption.",
+									strength_improvement: "strength",
+									detail:
+										"Balanced pace overall; allowed patient to speak without interruption.",
 								},
 								{
-									type: "improvement",
-									text: `At start, avoid cutting in; the patient said "..." before being interrupted.`,
+									strength_improvement: "improvement",
+									detail: `At start, avoid cutting in; the patient said "..." before being interrupted.`,
 								},
 							],
 							insufficient_evidence: false,

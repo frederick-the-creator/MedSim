@@ -1,9 +1,7 @@
 import { Assessment, AssessmentSchema } from "@shared/schemas/assessment";
 import { isAssessment } from "@server/shared/utils/validation";
-import { normalizeAssessment } from "@server/shared/utils/assessmentNormalize";
 import { logger } from "@server/middleware/httpLogger";
 import { DomainError } from "@server/shared/errors";
-import { response } from "express";
 
 interface ElevenTranscriptItem {
 	role: "user" | "agent" | string;
@@ -157,6 +155,13 @@ async function requestAssessmentJson(
 	model: string,
 	schema: unknown,
 ): Promise<{ rawText: string; parsed: unknown }> {
+	// console.log("contents");
+	// console.dir(contents, { depth: null });
+	// console.log("systemInstruction");
+	// console.dir(systemInstruction, { depth: null });
+	// console.log("schema");
+	// console.dir(schema, { depth: null });
+
 	const response = await ai.models.generateContent({
 		config: {
 			systemInstruction,
@@ -177,10 +182,8 @@ async function requestAssessmentJson(
 	return { rawText: safeText, parsed };
 }
 
-function validateAndNormalizeAssessment(candidate: unknown): Assessment | null {
-	const normalized = normalizeAssessment(candidate);
-	if (normalized && isAssessment(normalized)) return normalized;
-	// if (isAssessment(candidate)) return candidate;
+function validateAssessment(candidate: unknown): Assessment | null {
+	if (isAssessment(candidate)) return candidate;
 	return null;
 }
 
@@ -189,7 +192,6 @@ async function generateAssessmentWithRetries(
 	contents: { text: string }[],
 	baseSystemInstruction: string,
 	schema: unknown,
-	model: string,
 	cfg: Partial<GeminiRetryConfig> = {},
 ): Promise<Assessment> {
 	const { maxAttempts, initialDelayMs, delayIncrementMs } = {
@@ -210,11 +212,11 @@ async function generateAssessmentWithRetries(
 			ai,
 			contents,
 			effectiveSystemInstruction,
-			model,
+			"gemini-2.5-pro",
 			schema,
 		);
 
-		const validated = validateAndNormalizeAssessment(parsed);
+		const validated = validateAssessment(parsed);
 		if (validated) return validated;
 
 		// leave logging to caller and middleware; avoid console noise in services
@@ -250,7 +252,6 @@ export async function assessWithGemini(input: {
 		contents,
 		systemInstruction,
 		AssessmentSchema,
-		"gemini-2.5-pro",
 		{ maxAttempts: 3, initialDelayMs: 300, delayIncrementMs: 200 },
 	);
 }

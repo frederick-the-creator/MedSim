@@ -37,20 +37,18 @@ function isPointsArray(value: unknown): boolean {
 	return value.every(
 		(p) =>
 			isNonNullObject(p) &&
-			((p as any).type === "strength" || (p as any).type === "improvement") &&
-			typeof (p as any).text === "string",
+			((p as any).strength_improvement === "strength" ||
+				(p as any).strength_improvement === "improvement") &&
+			typeof (p as any).detail === "string",
 	);
 }
 
 function isDimension(value: unknown): boolean {
 	if (!isNonNullObject(value)) return false;
-	const name = (value as any).name;
 	const points = (value as any).points;
 	const insufficient = (value as any).insufficient_evidence;
 	const redFlags = (value as any).red_flags;
 	return (
-		typeof name === "string" &&
-		dimensionNames.includes(name as any) &&
 		isPointsArray(points) &&
 		typeof insufficient === "boolean" &&
 		Array.isArray(redFlags) &&
@@ -59,16 +57,29 @@ function isDimension(value: unknown): boolean {
 }
 
 export function isAssessment(value: unknown): value is Assessment {
+	console.log("Assessment input to isAssessment");
+	console.dir(value, { depth: null });
+
+	// Check overall object not null
 	if (!isNonNullObject(value)) return false;
+
+	// Check dimensions not null
 	const dims = (value as any).dimensions;
-	const summary = (value as any).summary;
 	if (!isNonNullObject(dims)) return false;
+
+	// Check dimension keys
 	const dimKeys = Object.keys(dims);
-	if (dimKeys.length !== dimensionKeys.length) return false;
+	if (dimKeys.length !== dimensionKeys.length) return false; // Expect 5 dimensions
+
 	for (const key of dimensionKeys) {
+		// Expect specific naming of dimensions
 		if (!Object.prototype.hasOwnProperty.call(dims, key)) return false;
 	}
+
+	// Check contents of each dimension
 	const dimsOk = dimensionKeys.every((k) => isDimension((dims as any)[k]));
+
+	const summary = (value as any).summary;
 	const summaryOk =
 		isNonNullObject(summary) &&
 		typeof (summary as any).free_text === "string" &&
