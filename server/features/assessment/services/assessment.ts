@@ -110,7 +110,7 @@ async function pollTranscriptWithBackoff(
 export async function fetchTranscriptFromElevenLabs(
 	conversationId: string,
 ): Promise<string> {
-	const maxMs = Number(process.env.TRANSCRIPT_POLL_MAX_MS ?? 0.5 * 1000); // Budget of 60 seconds
+	const maxMs = Number(process.env.TRANSCRIPT_POLL_MAX_MS ?? 60 * 1000); // Budget of 60 seconds
 	const baseMs = Number(process.env.TRANSCRIPT_POLL_BASE_MS ?? 300);
 	const maxDelayMs = Number(
 		process.env.TRANSCRIPT_POLL_MAX_DELAY_MS ?? 3 * 1000,
