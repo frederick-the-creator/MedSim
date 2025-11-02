@@ -3,6 +3,7 @@ import { isAssessment } from "@server/shared/utils/validation";
 import { normalizeAssessment } from "@server/shared/utils/assessmentNormalize";
 import { logger } from "@server/middleware/httpLogger";
 import { DomainError } from "@server/shared/errors";
+import { response } from "express";
 
 interface ElevenTranscriptItem {
 	role: "user" | "agent" | string;
@@ -38,13 +39,13 @@ async function getElevenTranscriptOnce(
 
 	// Response is ok even if transcript is not ready
 
-	const responseBody = await resp.json();
-
 	if (!resp.ok) {
 		throw new Error(`ElevenLabs error ${resp.status}: ${resp.statusText}`);
 	}
 
-	const json = responseBody as ElevenConversationResponse;
+	const json = (await resp.json()) as ElevenConversationResponse;
+
+	// logger.info(json);
 
 	// Ensure conversation has finished processing
 	if (json.status && json.status !== "done") {
@@ -95,7 +96,7 @@ async function pollTranscriptWithBackoff(
 		);
 
 		transcript = await getElevenTranscriptOnce(conversationId);
-		if (transcript) break;
+		if (transcript) return transcript;
 
 		if (delay > 0) {
 			// Create pause for the length of the delay
@@ -166,17 +167,6 @@ async function requestAssessmentJson(
 		model,
 	});
 
-	// // Test Error handling by making this fail
-	// const response = await ai.models.generateContent({
-	// 	config: {
-	// 		systemInstruction,
-	// 		responseMimeType: "application/json",
-	// 		responseJsonSchema: schema,
-	// 	},
-	// 	contents: [{ test: "test" }], // Test is not a valid property so should fail
-	// 	model,
-	// });
-
 	const safeText = response?.text ?? "{}";
 	let parsed: unknown = {};
 	try {
@@ -190,6 +180,7 @@ async function requestAssessmentJson(
 function validateAndNormalizeAssessment(candidate: unknown): Assessment | null {
 	const normalized = normalizeAssessment(candidate);
 	if (normalized && isAssessment(normalized)) return normalized;
+	// if (isAssessment(candidate)) return candidate;
 	return null;
 }
 
