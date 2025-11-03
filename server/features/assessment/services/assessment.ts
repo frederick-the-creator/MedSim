@@ -2,6 +2,7 @@ import { Assessment, AssessmentSchema } from "@shared/schemas/assessment";
 import { isAssessment } from "@server/shared/utils/validation";
 import { logger } from "@server/middleware/httpLogger";
 import { DomainError } from "@server/shared/errors";
+import type { ApiError } from "@google/genai";
 
 interface ElevenTranscriptItem {
 	role: "user" | "agent" | string;
@@ -148,6 +149,45 @@ function buildEffectiveSystemInstruction(
 		: `${base}\n\nReminder: Your previous output failed JSON Schema validation. Output MUST match the schema exactly. Do NOT add extra fields. Include all required fields even if empty/false.`;
 }
 
+function isTransientGeminiError(err: ApiError): boolean {
+	const s = err.status;
+	return s === 429 || (s >= 500 && s <= 599);
+}
+
+async function generateContentWithTransientRetries(
+	ai: GenAIClient,
+	args: any,
+	cfg: {
+		maxAttempts: number;
+		baseMs: number;
+		maxDelayMs?: number;
+		jitterMs?: number;
+	} = {
+		maxAttempts: 3,
+		baseMs: 400,
+		maxDelayMs: 2000,
+		jitterMs: 120,
+	},
+) {
+	for (let attempt = 1; attempt <= cfg.maxAttempts; attempt++) {
+		try {
+			return await ai.models.generateContent(args);
+		} catch (e) {
+			const err = e as ApiError;
+			if (attempt >= cfg.maxAttempts || !isTransientGeminiError(err)) throw err;
+			logger.info("Transient Gemini Error - Retrying");
+			const exp = Math.min(
+				cfg.baseMs * 2 ** (attempt - 1),
+				cfg.maxDelayMs ?? Number.POSITIVE_INFINITY,
+			);
+			const jitter = Math.floor(Math.random() * (cfg.jitterMs ?? 0));
+			await new Promise((r) => setTimeout(r, exp + jitter));
+		}
+	}
+
+	throw new Error("Gemini generate assessment retry loop exhausted");
+}
+
 async function requestAssessmentJson(
 	ai: GenAIClient,
 	contents: { text: string }[],
@@ -162,7 +202,7 @@ async function requestAssessmentJson(
 	// console.log("schema");
 	// console.dir(schema, { depth: null });
 
-	const response = await ai.models.generateContent({
+	const response = await generateContentWithTransientRetries(ai, {
 		config: {
 			systemInstruction,
 			responseMimeType: "application/json",
