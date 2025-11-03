@@ -6,6 +6,7 @@ import {
 } from "../services/assessment";
 import { isAssessment } from "@server/shared/utils/validation";
 import { Request, Response, NextFunction } from "express";
+import { insertAssessmentData } from "@server/features/assessment/repos/assessment";
 
 export async function assessmentRoute(
 	req: Request,
@@ -16,7 +17,7 @@ export async function assessmentRoute(
 	res.locals.context = {
 		op: "assessment.generate",
 		conversationId,
-		provider: "elevenlabs",
+		provider: "elevenlabs_and_gemini",
 	};
 
 	const transcript = await fetchTranscriptFromElevenLabs(conversationId);
@@ -35,6 +36,16 @@ export async function assessmentRoute(
 		res.status(502).json({ message: "Assessment generation failed" });
 		return;
 	}
+
+	const reqId = req.id as string;
+
+	await insertAssessmentData({
+		reqId,
+		conversationId,
+		medicalCase,
+		transcript,
+		assessment: JSON.stringify(assessment),
+	});
 
 	req.log.info("Assessment successfully retrieved");
 	res.json({ transcript, assessment });
