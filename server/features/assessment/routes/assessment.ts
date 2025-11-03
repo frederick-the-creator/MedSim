@@ -39,13 +39,13 @@ export async function assessmentRoute(
 
 	const reqId = req.id as string;
 
-	await insertAssessmentData({
-		reqId,
-		conversationId,
-		medicalCase,
-		transcript,
-		assessment: JSON.stringify(assessment),
-	});
+	// await insertAssessmentData({
+	// 	reqId,
+	// 	conversationId,
+	// 	medicalCase,
+	// 	transcript,
+	// 	assessment: JSON.stringify(assessment),
+	// });
 
 	req.log.info("Assessment successfully retrieved");
 	res.json({ transcript, assessment });

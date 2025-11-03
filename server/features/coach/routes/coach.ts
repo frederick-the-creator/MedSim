@@ -33,7 +33,7 @@ export async function coachRoute(
 			systemInstruction,
 		},
 		contents,
-		model: "gemini-2.0-flash",
+		model: "gemini-2.5-flash-lite",
 	});
 
 	res.setHeader("Content-Type", "text/plain; charset=utf-8");

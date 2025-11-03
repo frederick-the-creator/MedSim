@@ -163,7 +163,7 @@ async function generateContentWithTransientRetries(
 		maxDelayMs?: number;
 		jitterMs?: number;
 	} = {
-		maxAttempts: 3,
+		maxAttempts: 10,
 		baseMs: 400,
 		maxDelayMs: 2000,
 		jitterMs: 120,
@@ -252,7 +252,7 @@ async function generateAssessmentWithRetries(
 			ai,
 			contents,
 			effectiveSystemInstruction,
-			"gemini-2.5-pro",
+			"gemini-2.5-flash-lite",
 			schema,
 		);
 
