@@ -57,7 +57,7 @@ function isDimension(value: unknown): boolean {
 }
 
 export function isAssessment(value: unknown): value is Assessment {
-	console.log("Assessment input to isAssessment");
+	// console.log("Assessment input to isAssessment");
 	console.dir(value, { depth: null });
 
 	// Check overall object not null
