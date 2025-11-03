@@ -46,7 +46,6 @@ export default function CaseCard({ medicalCase, onStart }: CaseCardProps) {
 					className="text-sm leading-relaxed text-muted-foreground"
 					data-testid={`text-scenario-${medicalCase.id}`}
 				>
-					{caseBackground.scenario}
 				</p>
 			</CardContent>
 

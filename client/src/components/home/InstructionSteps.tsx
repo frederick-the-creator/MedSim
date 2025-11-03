@@ -4,40 +4,32 @@ const steps = [
 	{
 		number: 1,
 		icon: BookOpen,
-		title: "Case Library",
-		description: "Choose a scenario",
+		title: "Case Study Library",
+		description: "Choose a case from the selection below to start training.",
 	},
 	{
 		number: 2,
 		icon: MessageSquare,
 		title: "Simulated Interview",
-		points: [
-			"Patient won't volunteer info",
-			"Use open questions for ICE",
-			"Keep it plain-English",
-		],
+		description: "After selecting a case study, you will be shown the clinical findings and can begin the patient interview."
 	},
 	{
 		number: 3,
 		icon: ClipboardCheck,
 		title: "Feedback Mode",
-		points: [
-			"Auto-starts when you say goodbye",
-			'Or say "FEEDBACK MODE"',
-			"Get structured feedback",
-		],
+		description: "After completing the conversation with the patient, you will be presented with a personalized assessment and strategies for improvement. Use the chat function to dig deeper."
 	},
 ];
 
 export default function InstructionSteps() {
 	return (
-		<div className="py-16">
-			<div className="max-w-7xl mx-auto px-4">
+			<div className="flex flex-col max-w-7xl p-4 align-center mx-auto my-16">
 				<div className="text-center mb-12">
-					<h2 className="text-4xl font-bold mb-4">Instructions</h2>
+					<h2 className="text-4xl font-bold mb-4">OST Interview Trainer</h2>
 					<p className="text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-						Pick an agent to begin. The patient reveals details only when asked.
-						Use open questions and explore ideas, concerns, expectations (ICE).
+					This tool is designed to help you prepare for the communication and patient-interaction stations for the ophthalmology specialty training interiews. 
+					It simulates realistic consultation scenarios where you can practise structuring your approach, using open questions, and demonstrating empathy. 
+					The goal is to improve your fluency, confidence, and consistency under interview conditions.
 					</p>
 				</div>
 
@@ -47,7 +39,7 @@ export default function InstructionSteps() {
 						return (
 							<div
 								key={step.number}
-								className="flex flex-col items-start gap-4"
+								className="flex flex-col items-start gap-4 p-4"
 							>
 								<div className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xl font-bold">
 									{step.number}
@@ -62,25 +54,12 @@ export default function InstructionSteps() {
 											{step.description}
 										</p>
 									)}
-									{step.points && (
-										<ul className="space-y-2 mt-2">
-											{step.points.map((point, idx) => (
-												<li
-													key={idx}
-													className="text-sm leading-relaxed text-muted-foreground flex items-start gap-2"
-												>
-													<span className="text-primary mt-0.5">•</span>
-													<span>{point}</span>
-												</li>
-											))}
-										</ul>
-									)}
 								</div>
 							</div>
 						);
 					})}
 				</div>
 			</div>
-		</div>
+
 	);
 }

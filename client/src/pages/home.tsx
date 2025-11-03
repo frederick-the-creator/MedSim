@@ -26,11 +26,8 @@ export default function Home() {
 						>
 							Select a Case Study
 						</h2>
-						<p className="text-center text-lg text-muted-foreground mb-12 max-w-2xl mx-auto">
-							Choose a simulation to begin your training session
-						</p>
 
-						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 my-6">
 							{medicalCases.map((medicalCase) => (
 								<CaseCard
 									key={medicalCase.id}
