@@ -1,0 +1,13 @@
+### Testing on mobile
+
+Run: LOCAL_HTTPS=1 PORT=5000 npm run dev
+On Mobile: Connect to https://<your-local-ip>:5000
+
+### Railway logs
+
+Use Railway CLI to import logs to local file to review
+
+production: railway_logs/logs.txt
+staging: railway_logs_staging/logs.txt
+
+Directories have been linked to the relevant environments using railway/link
