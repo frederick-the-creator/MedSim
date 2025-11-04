@@ -1,0 +1,22 @@
+---
+alwaysApply: false
+---
+
+Routes vs Service Logic
+Routes should be very thin
+
+Route
+
+- Parse inputs from request ( …. = req.body)
+- Check auth & permissions
+- Call services
+- Translate results into HTTP response codes (e.g. if X, use 203)
+- Handle errors and map them to HTTP response codes
+
+Service
+
+- Implement business rules
+- Orchestrate data operations
+- Be reusable - Should be able to call a service from HTTP routes, background jobs, tests, etc.
+- Be framework agnostic - Should not contain Express objects like req, res, etc.
+- Throw domain errors

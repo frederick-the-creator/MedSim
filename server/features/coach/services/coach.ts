@@ -3,6 +3,10 @@ import type { MedicalCase } from "@shared/schemas/case";
 import type { CoachRequestBody } from "@shared/schemas/coach";
 import { gemini } from "@server/shared/geminiClient";
 import type { GenerateContentResponse } from "@google/genai";
+import type { CoachMessage } from "@shared/schemas/coach";
+import { upsertCoachData } from "@server/features/coach/repos/coach";
+import type { Logger } from "pino";
+import { Json } from "drizzle-zod";
 
 export async function buildCoachSystemInstruction(
 	medicalCase: MedicalCase,
@@ -22,11 +26,12 @@ export async function buildCoachSystemInstruction(
 
 type SimpleMsg = { role: "user" | "assistant"; content: string };
 
-export async function generateContentStream(
-	reqBody: CoachRequestBody,
-): Promise<AsyncGenerator<GenerateContentResponse>> {
-	const { messages, medicalCase, transcript, assessment } = reqBody; // Add conversation ID later
-
+export async function generateContentStream({
+	medicalCase,
+	transcript,
+	assessment,
+	messages,
+}: CoachRequestBody): Promise<AsyncGenerator<GenerateContentResponse>> {
 	const systemInstruction = await buildCoachSystemInstruction(
 		medicalCase,
 		transcript,
@@ -38,7 +43,7 @@ export async function generateContentStream(
 		parts: [{ text: m.content }],
 	}));
 
-	const response = gemini.models.generateContentStream({
+	const response = await gemini.models.generateContentStream({
 		config: {
 			systemInstruction,
 		},
@@ -47,4 +52,37 @@ export async function generateContentStream(
 	});
 
 	return response;
+}
+
+type SaveConverstation = {
+	conversationId: string;
+	priorMessages: CoachMessage[];
+	assistantText: string;
+};
+
+export async function saveCoachConversation(
+	input: SaveConverstation,
+	logger?: Logger,
+): Promise<void> {
+	const { conversationId, priorMessages, assistantText } = input;
+
+	if (!assistantText) return;
+
+	const assistantMsg: CoachMessage = {
+		id: `assistant-${Date.now()}`,
+		role: "assistant",
+		content: assistantText,
+		timestamp: new Date(),
+	};
+
+	const allMessages = [...priorMessages, assistantMsg];
+
+	try {
+		await upsertCoachData({
+			conversationId,
+			messages: allMessages as Json,
+		});
+	} catch (err) {
+		logger?.error({ err }, "coach_upsert_failed");
+	}
 }

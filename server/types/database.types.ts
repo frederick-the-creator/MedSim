@@ -44,6 +44,27 @@ export type Database = {
         }
         Relationships: []
       }
+      coach: {
+        Row: {
+          conversationId: string
+          createdAt: string
+          id: string
+          messages: Json
+        }
+        Insert: {
+          conversationId: string
+          createdAt?: string
+          id?: string
+          messages: Json
+        }
+        Update: {
+          conversationId?: string
+          createdAt?: string
+          id?: string
+          messages?: Json
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

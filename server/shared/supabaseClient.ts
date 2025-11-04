@@ -8,13 +8,12 @@ export const SUPABASE_PUBLISHABLE_KEY = process.env
 export type TypedSupabaseClient = SupabaseClient<Database>;
 
 /**
- * Create a Supabase client authenticated with the Secret key (admin privileges).
- * Used by services to access auth.admin endpoints.
+ * Create a Supabase client with publishable key (will  run as anon).
  */
 export function createSupabaseClient(): TypedSupabaseClient {
 	if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
 		throw new Error(
-			"Supabase admin client not configured. Missing SUPABASE_URL or SUPABASE_SECRET_KEY",
+			"Supabase  client not configured. Missing SUPABASE_URL or SUPABASE_PUBLISHABLE_KEY",
 		);
 	}
 	return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
