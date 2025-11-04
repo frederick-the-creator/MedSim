@@ -101,6 +101,7 @@ export default function CasePractice() {
 					throw new Error("Missing transcript or assessment");
 				}
 				const body: CoachRequestBody = {
+					// conversationId,
 					messages: [...coachMessages, userMsg],
 					transcript,
 					assessment: JSON.stringify(assessment),

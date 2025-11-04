@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { buildCoachSystemInstruction } from "../services/coach";
 import { parseCoachRequestBody } from "@server/shared/utils/validation";
+import { gemini } from "@server/shared/geminiClient";
+import { generateContentStream } from "@server/features/coach/services/coach";
 
 export async function coachRoute(
 	req: Request,
@@ -8,33 +10,16 @@ export async function coachRoute(
 	next: NextFunction,
 ): Promise<void> {
 	res.locals.context = { op: "coach.stream" };
-	const body = parseCoachRequestBody(req.body);
 
-	const apiKey = process.env.GEMINI_API_KEY;
-	if (!apiKey) throw new Error("GEMINI_API_KEY missing");
+	// Route
+	// - Validate body
+	// - Call function to generate a response
+	// - Set headers
+	// - Stream response
 
-	const { GoogleGenAI } = await import("@google/genai");
-	const ai = new GoogleGenAI({ apiKey });
+	const reqBody = parseCoachRequestBody(req.body);
 
-	const systemInstruction = await buildCoachSystemInstruction(
-		body.assessment,
-		body.transcript,
-		body.medicalCase,
-	);
-
-	type SimpleMsg = { role: "user" | "assistant"; content: string };
-	const contents = body.messages.map((m: SimpleMsg) => ({
-		role: m.role === "assistant" ? "model" : "user",
-		parts: [{ text: m.content }],
-	}));
-
-	const response = await ai.models.generateContentStream({
-		config: {
-			systemInstruction,
-		},
-		contents,
-		model: "gemini-2.5-flash-lite",
-	});
+	const response = await generateContentStream(reqBody);
 
 	res.setHeader("Content-Type", "text/plain; charset=utf-8");
 	res.setHeader("Transfer-Encoding", "chunked");

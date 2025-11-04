@@ -11,6 +11,7 @@ export const coachMessageSchema = z.object({
 export type CoachMessage = z.infer<typeof coachMessageSchema>;
 
 export const coachRequestSchema = z.object({
+	// conversationId: z.string(),
 	messages: z.array(coachMessageSchema).max(100),
 	transcript: z.string(),
 	assessment: z.string(),
