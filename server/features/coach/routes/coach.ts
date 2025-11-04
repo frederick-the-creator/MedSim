@@ -1,36 +1,19 @@
-import { Request, Response, NextFunction } from "express";
-import {
-	buildCoachSystemInstruction,
-	saveCoachConversation,
-} from "../services/coach";
+import { Request, Response } from "express";
+import { saveCoachConversation } from "../services/coach";
 import { parseCoachRequestBody } from "@server/shared/utils/validation";
-import { gemini } from "@server/shared/geminiClient";
-import { generateContentStream } from "@server/features/coach/services/coach";
+import { generateCoachResponse } from "@server/features/coach/services/coach";
 
-export async function coachRoute(
-	req: Request,
-	res: Response,
-	next: NextFunction,
-): Promise<void> {
-	res.locals.context = { op: "coach.stream" };
-
-	// Route
-	// - Validate body
-	// - Call function to generate a response
-	// - Set headers
-	// - Stream response
+export async function coachRoute(req: Request, res: Response): Promise<void> {
+	res.locals.context = { op: "coach.stream", provider: "google-genai" };
 
 	const body = parseCoachRequestBody(req.body);
 
-	// TODO
-	// - Refine to add child logger like in save Coach
-	// - Rename service (generateCoachResponse)
-
-	const response = await generateContentStream({
-		medicalCase: body.medicalCase,
+	res.locals.context.step = "generate";
+	const response = await generateCoachResponse({
+		messages: body.messages,
 		transcript: body.transcript,
 		assessment: body.assessment,
-		messages: body.messages,
+		medicalCase: body.medicalCase,
 	});
 
 	res.setHeader("Content-Type", "text/plain; charset=utf-8");
@@ -46,14 +29,12 @@ export async function coachRoute(
 			acc += text;
 		}
 	}
-	res.end();
 
-	void saveCoachConversation(
-		{
-			conversationId: "TEST-COACH",
-			priorMessages: body.messages,
-			assistantText: acc.trim(),
-		},
-		req.log.child({ op: "coach.save" }), // Create request scoped child logger - Any logs used in the service inherits reqId and operation tag for traceability
-	);
+	res.locals.context.step = "save";
+	await saveCoachConversation({
+		conversationId: "TEST-COACH",
+		priorMessages: body.messages,
+		assistantText: acc.trim(),
+	});
+	res.end();
 }

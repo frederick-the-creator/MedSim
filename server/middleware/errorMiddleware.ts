@@ -169,6 +169,10 @@ export function errorResponder(
 ): void {
 	(res as any).err = err; // <-- make the error visible to pino-http
 	const reqId = req.id;
+	if (res.headersSent) {
+		// Response already sent; avoid attempting to write headers/body
+		return;
+	}
 
 	if (err instanceof DomainError) {
 		const details = (err as DomainError).details as any | undefined;

@@ -5,7 +5,6 @@ import { gemini } from "@server/shared/geminiClient";
 import type { GenerateContentResponse } from "@google/genai";
 import type { CoachMessage } from "@shared/schemas/coach";
 import { upsertCoachData } from "@server/features/coach/repos/coach";
-import type { Logger } from "pino";
 import { Json } from "drizzle-zod";
 
 export async function buildCoachSystemInstruction(
@@ -26,12 +25,10 @@ export async function buildCoachSystemInstruction(
 
 type SimpleMsg = { role: "user" | "assistant"; content: string };
 
-export async function generateContentStream({
-	medicalCase,
-	transcript,
-	assessment,
-	messages,
-}: CoachRequestBody): Promise<AsyncGenerator<GenerateContentResponse>> {
+export async function generateCoachResponse(
+	input: CoachRequestBody,
+): Promise<AsyncGenerator<GenerateContentResponse>> {
+	const { medicalCase, transcript, assessment, messages } = input;
 	const systemInstruction = await buildCoachSystemInstruction(
 		medicalCase,
 		transcript,
@@ -62,7 +59,6 @@ type SaveConverstation = {
 
 export async function saveCoachConversation(
 	input: SaveConverstation,
-	logger?: Logger,
 ): Promise<void> {
 	const { conversationId, priorMessages, assistantText } = input;
 
@@ -77,12 +73,8 @@ export async function saveCoachConversation(
 
 	const allMessages = [...priorMessages, assistantMsg];
 
-	try {
-		await upsertCoachData({
-			conversationId,
-			messages: allMessages as Json,
-		});
-	} catch (err) {
-		logger?.error({ err }, "coach_upsert_failed");
-	}
+	await upsertCoachData({
+		conversationId,
+		messages: allMessages as Json,
+	});
 }
