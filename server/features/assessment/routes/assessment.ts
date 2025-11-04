@@ -7,6 +7,7 @@ import {
 import { isAssessment } from "@server/shared/utils/validation";
 import { Request, Response, NextFunction } from "express";
 import { insertAssessmentData } from "@server/features/assessment/repos/assessment";
+import { Json } from "drizzle-zod";
 
 export async function assessmentRoute(
 	req: Request,
@@ -39,13 +40,13 @@ export async function assessmentRoute(
 
 	const reqId = req.id as string;
 
-	// await insertAssessmentData({
-	// 	reqId,
-	// 	conversationId,
-	// 	medicalCase,
-	// 	transcript,
-	// 	assessment: JSON.stringify(assessment),
-	// });
+	await insertAssessmentData({
+		reqId,
+		conversationId,
+		medicalCase,
+		transcript,
+		assessment: assessment as Json,
+	});
 
 	req.log.info("Assessment successfully retrieved");
 	res.json({ transcript, assessment });
