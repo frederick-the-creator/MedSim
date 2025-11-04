@@ -35,11 +35,8 @@ export default function VoiceAgentInterface({
 		<div>
 			<div className="space-y-4 h-full overflow-y-auto p-4">
 				<h2 className="text-xl font-semibold" data-testid="text-patient-name">
-					Voice Consultation with {patientName}
+					Consultation with {patientName}
 				</h2>
-				<p className="text-sm text-muted-foreground">
-					Click the phone button to begin the voice consultation
-				</p>
 			</div>
 
 			<Card className="p-8 max-w-md w-full">
