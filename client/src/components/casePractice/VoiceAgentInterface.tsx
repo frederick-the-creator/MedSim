@@ -96,16 +96,6 @@ export default function VoiceAgentInterface({
 							</Button>
 						)}
 					</div>
-
-					{voiceAgent.conversationId && (
-						<p
-							className="text-xs text-muted-foreground"
-							data-testid="text-conversation-id"
-						>
-							Conversation ID: {voiceAgent.conversationId.substring(0, 8)}...
-						</p>
-					)}
-
 				</div>
 			</Card>
 		</div>

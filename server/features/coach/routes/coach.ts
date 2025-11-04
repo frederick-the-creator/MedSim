@@ -32,7 +32,7 @@ export async function coachRoute(req: Request, res: Response): Promise<void> {
 
 	res.locals.context.step = "save";
 	await saveCoachConversation({
-		conversationId: "TEST-COACH",
+		conversationId: body.conversationId,
 		priorMessages: body.messages,
 		assistantText: acc.trim(),
 	});

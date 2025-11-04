@@ -19,6 +19,7 @@ export default function CasePractice() {
 	const [isChatLoading, setIsChatLoading] = useState(false);
 	const [isErrorOpen, setIsErrorOpen] = useState(false);
 	const secondRowRef = useRef<HTMLDivElement | null>(null);
+	const [conversationId, setConversationId] = useState<string | null>(null)
 
 	const caseId = params?.id ? parseInt(params.id) : null;
 	const medicalCase = medicalCases.find((c) => c.id === caseId);
@@ -65,8 +66,11 @@ export default function CasePractice() {
 		setLocation("/");
 	};
 
+	// useCallback to avoid un-necessary re-renders of child when parent state variables change
+	// Assumption that medicalCase and runAssessment don't change, but added as dependencies for exhausitveness/future proofing (i.e. What is technically possible as opposed to practically possible)
 	const handleEndConversation = useCallback((conversationId: string | null | undefined) => {
 		if (!conversationId) return;
+		setConversationId(conversationId);
 		(async () => {
 			try {
 				await runAssessment(conversationId, medicalCase);
@@ -97,11 +101,11 @@ export default function CasePractice() {
 		setIsChatLoading(true);
 		(async () => {
 			try {
-				if (!transcript || !assessment) {
-					throw new Error("Missing transcript or assessment");
+				if (!transcript || !assessment || !conversationId) {
+					throw new Error("Missing transcript, assessment or conversationId");
 				}
 				const body: CoachRequestBody = {
-					// conversationId,
+					conversationId,
 					messages: [...coachMessages, userMsg],
 					transcript,
 					assessment: JSON.stringify(assessment),
@@ -121,7 +125,7 @@ export default function CasePractice() {
 				setIsChatLoading(false);
 			}
 		})();
-	}, [coachMessages, transcript, assessment, medicalCase]);
+	}, [coachMessages, transcript, assessment, medicalCase, conversationId]);
 
 	return (
 		<div className="min-h-screen flex flex-col bg-background">
@@ -172,7 +176,7 @@ export default function CasePractice() {
 				</div>
 
 				{/* Second Row */}
-				{assessment && transcript && (
+				{assessment && transcript && conversationId && (
 					<div ref={secondRowRef} className={`grid lg:grid-cols-[1fr_1fr] gap-6 mt-8`}>
 						{/*
 							mt-8: Adds margin to top

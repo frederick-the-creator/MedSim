@@ -26,7 +26,7 @@ export async function buildCoachSystemInstruction(
 type SimpleMsg = { role: "user" | "assistant"; content: string };
 
 export async function generateCoachResponse(
-	input: CoachRequestBody,
+	input: Omit<CoachRequestBody, "conversationId">,
 ): Promise<AsyncGenerator<GenerateContentResponse>> {
 	const { medicalCase, transcript, assessment, messages } = input;
 	const systemInstruction = await buildCoachSystemInstruction(

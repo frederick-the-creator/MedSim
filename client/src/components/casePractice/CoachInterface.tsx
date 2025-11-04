@@ -16,7 +16,7 @@ interface CoachInterfaceProps {
 export default function CoachInterface({
 	messages,
 	onSendMessage,
-	isLoading = false,
+	isLoading = false
 }: CoachInterfaceProps) {
 	const [input, setInput] = useState("");
 	const messagesEndRef = useRef<HTMLDivElement>(null);
