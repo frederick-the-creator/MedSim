@@ -1,15 +1,18 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Stethoscope } from "lucide-react";
+import type { ReactNode } from "react";
 
 interface HeaderProps {
 	showBackButton?: boolean;
 	onBack?: () => void;
+    rightActions?: ReactNode;
 }
 
 export default function Header({
 	showBackButton = false,
 	onBack,
+    rightActions,
 }: HeaderProps) {
 	return (
 		<header className="border-b bg-background sticky top-0 z-50">
@@ -23,17 +26,19 @@ export default function Header({
 					<span className="text-xl font-bold">MedSim</span>
 				</Link>
 
-				{showBackButton && (
-					<Button
-						variant="ghost"
-						onClick={onBack}
-						className="gap-2"
-						data-testid="button-back"
-					>
-						<ArrowLeft className="w-4 h-4" />
-						Back to Cases
-					</Button>
-				)}
+                {rightActions ?? (
+                    showBackButton ? (
+                        <Button
+                            variant="ghost"
+                            onClick={onBack}
+                            className="gap-2"
+                            data-testid="button-back"
+                        >
+                            <ArrowLeft className="w-4 h-4" />
+                            Back to Cases
+                        </Button>
+                    ) : null
+                )}
 			</div>
 		</header>
 	);

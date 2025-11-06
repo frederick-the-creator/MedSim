@@ -5,6 +5,7 @@ import {
 	AccordionItem,
 	AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Button } from "@/components/ui/button";
 import SignupCard from "@/components/landing/SignupCard";
 import { disciplines } from "@/data/disciplines";
 
@@ -15,7 +16,14 @@ export default function Landing() {
 
 	return (
 		<div className="min-h-screen flex flex-col bg-background">
-			<Header />
+			<Header
+				rightActions={
+					<div className="flex items-center gap-2">
+						<Button variant="ghost" data-testid="button-login">Log in</Button>
+						<Button data-testid="button-signup">Sign up</Button>
+					</div>
+				}
+			/>
 
 			<main className="flex-1">
 				{/* Tagline */}
