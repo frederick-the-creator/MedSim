@@ -1,5 +1,7 @@
 import { useLocation } from "wouter";
 import Header from "@/components/shared/Header";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/lib/supabaseClient";
 import InstructionSteps from "@/components/home/InstructionSteps";
 import CaseCard from "@/components/casePractice/CaseCard";
 import { medicalCases } from "@shared/cases";
@@ -7,13 +9,24 @@ import { medicalCases } from "@shared/cases";
 export default function Home() {
 	const [, setLocation] = useLocation();
 
+	const handleLogout = async () => {
+		await supabase.auth.signOut();
+		setLocation("/");
+	};
+
 	const handleStartCase = (caseId: number) => {
 		setLocation(`/case/${caseId}`);
 	};
 
 	return (
 		<div className="min-h-screen flex flex-col bg-background">
-			<Header />
+			<Header
+				rightActions={
+					<div className="flex items-center gap-2">
+						<Button variant="ghost" onClick={handleLogout}>Log out</Button>
+					</div>
+				}
+			/>
 
 			<main className="flex-1">
 				<InstructionSteps />
