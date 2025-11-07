@@ -1,5 +1,7 @@
 import Header from "@/components/shared/Header";
 import { useLocation } from "wouter";
+import { useEffect } from "react";
+import { supabase } from "@/lib/supabaseClient";
 import {
 	Accordion,
 	AccordionContent,
@@ -17,6 +19,15 @@ export default function Landing() {
         const q = `?discipline=${encodeURIComponent(d.name)}`;
         setLocation(`/signup${q}`);
     };
+
+    useEffect(() => {
+        (async () => {
+            const { data } = await supabase.auth.getSession();
+            if (data.session) {
+                setLocation("/home");
+            }
+        })();
+    }, []);
 
 	return (
 		<div className="min-h-screen flex flex-col bg-background">
