@@ -19,7 +19,7 @@ export type Database = {
           assessment: Json | null
           conversationId: string
           createdAt: string
-          id: number
+          id: string
           medicalCase: Json
           reqId: string
           transcript: string | null
@@ -28,7 +28,7 @@ export type Database = {
           assessment?: Json | null
           conversationId: string
           createdAt?: string
-          id?: number
+          id?: string
           medicalCase: Json
           reqId: string
           transcript?: string | null
@@ -37,7 +37,7 @@ export type Database = {
           assessment?: Json | null
           conversationId?: string
           createdAt?: string
-          id?: number
+          id?: string
           medicalCase?: Json
           reqId?: string
           transcript?: string | null

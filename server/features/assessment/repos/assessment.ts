@@ -8,18 +8,10 @@ export async function insertAssessmentData(
 	// console.log("fields:");
 	// console.log(fields);
 	const supabase = createSupabaseClient();
-	const { data, error } = await supabase
-		.from("assessment")
-		.insert(fields)
-		.select()
-		.single();
+	const { error } = await supabase.from("assessment").insert(fields);
 
 	if (error) {
 		console.log("[insertAssessmentData] DB error: ", error);
 		throw new Error(error.message || "Failed to create round");
-	}
-
-	if (!data) {
-		throw new Error("Failed to create assessment row: no data returned");
 	}
 }
