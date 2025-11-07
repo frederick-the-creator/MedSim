@@ -7,12 +7,16 @@ import Home from "@/pages/home";
 import Landing from "@/pages/landing";
 import CasePractice from "@/pages/casePractice";
 import NotFound from "@/pages/not-found";
+import Login from "@/pages/auth/login";
+import Signup from "@/pages/auth/signup";
 
 function Router() {
 	return (
 		<Switch>
             <Route path="/" component={Landing} />
             <Route path="/home" component={Home} />
+			<Route path="/login" component={Login} />
+			<Route path="/signup" component={Signup} />
 			<Route path="/case/:id" component={CasePractice} />
 			<Route component={NotFound} />
 		</Switch>

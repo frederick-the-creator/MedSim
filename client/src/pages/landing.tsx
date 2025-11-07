@@ -1,4 +1,5 @@
 import Header from "@/components/shared/Header";
+import { useLocation } from "wouter";
 import {
 	Accordion,
 	AccordionContent,
@@ -8,22 +9,24 @@ import {
 import { Button } from "@/components/ui/button";
 import SignupCard from "@/components/landing/SignupCard";
 import { disciplines } from "@/data/disciplines";
+import type { Discipline } from "@/data/disciplines";
 
 export default function Landing() {
-	const handleClick = () => {
-		// no-op for now; will be wired later
-	};
+    const [, setLocation] = useLocation();
+    const handleClick = (d: Discipline) => {
+        const q = `?discipline=${encodeURIComponent(d.name)}`;
+        setLocation(`/signup${q}`);
+    };
 
 	return (
 		<div className="min-h-screen flex flex-col bg-background">
-			<Header
-				rightActions={
-					<div className="flex items-center gap-2">
-						<Button variant="ghost" data-testid="button-login">Log in</Button>
-						<Button data-testid="button-signup">Sign up</Button>
-					</div>
-				}
-			/>
+            <Header
+                rightActions={
+                    <div className="flex items-center gap-2">
+                        <Button variant="ghost" data-testid="button-login" onClick={() => setLocation("/login")}>Log in</Button>
+                    </div>
+                }
+            />
 
 			<main className="flex-1">
 				{/* Tagline */}
@@ -47,7 +50,7 @@ export default function Landing() {
 								width="560"
 								height="315"
 								className="w-full h-full"
-								src="https://www.youtube.com/embed/ZK-rNEhJIDs"
+								src="https://www.youtube.com/embed/FfqW87U5dD8"
 								allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
 								referrerPolicy="strict-origin-when-cross-origin"
 								loading="lazy"
@@ -64,13 +67,13 @@ export default function Landing() {
 							Get started
 						</h2>
 						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 my-6">
-							{disciplines.map((d) => (
+                            {disciplines.map((d) => (
 								<SignupCard
 									key={d.name}
 									discipline={d.name}
 									ctaLabel={d.ctaLabel}
 									isPrimary={d.isPrimary}
-									onClick={handleClick}
+                                    onClick={() => handleClick(d)}
 								/>
 							))}
 						</div>
