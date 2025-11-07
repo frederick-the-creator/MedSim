@@ -16,6 +16,7 @@ type MessageDialogProps = {
 	showSpinner?: boolean;
 	actionLabel?: string;
 	onAction?: () => void;
+	hideCloseButton?: boolean;
 };
 
 const MessageDialog: React.FC<MessageDialogProps> = ({
@@ -26,10 +27,11 @@ const MessageDialog: React.FC<MessageDialogProps> = ({
 	showSpinner,
 	actionLabel,
 	onAction,
+	hideCloseButton,
 }) => {
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="sm:max-w-md">
+			<DialogContent className="sm:max-w-md" hideCloseButton={hideCloseButton}>
 				<DialogHeader>
 					<DialogTitle>{title}</DialogTitle>
 					{description && (

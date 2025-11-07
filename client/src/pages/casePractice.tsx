@@ -204,6 +204,7 @@ export default function CasePractice() {
 					open={assessmentLoading}
 					onOpenChange={() => {}}
 					title="Generating assessment…"
+					hideCloseButton
 					showSpinner
 				/>
 
