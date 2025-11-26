@@ -23,7 +23,7 @@ export default function Header({
 					data-testid="link-home"
 				>
 					<Stethoscope className="w-6 h-6 text-primary" />
-					<span className="text-xl font-bold">MedSim</span>
+					<span className="text-xl">MedSimST</span>
 				</Link>
 
                 {rightActions ?? (
